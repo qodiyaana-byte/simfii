@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-
 import { questions } from "@/lib/questions";
 import { mindmapBranches, positions, slides, tableRows, tagLabels, type Seg } from "@/lib/content";
 import { Mixed } from "./mixed";
-import { HomeScene, MapScene, type PinStatus } from "./scenery";
+import { MapScene, StartScene, type PinStatus } from "./scenery";
 
 type Screen = "home" | "identity" | "map" | "learn" | "quiz" | "review" | "result";
 type Player = { id: string; nickname: string; classCode: string };
@@ -41,6 +41,8 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const posQuestions = useMemo(() => questions.filter((item) => item.position === position), [position]);
@@ -61,6 +63,7 @@ export default function Page() {
   const finalScore = Math.round((totalCorrect / questions.length) * 100);
   const nextPosition = positions.find((item) => !completed.includes(item.id) && isUnlocked(item.id));
   const progress = Math.round((completed.length / TOTAL_POS) * 100);
+  const starsEarned = completed.length ? Math.floor(finalScore / 20) : 0;
 
   const statusOf = (id: number): PinStatus => completed.includes(id) ? "done" : !isUnlocked(id) ? "locked" : nextPosition?.id === id ? "next" : "open";
   const status = Object.fromEntries(positions.map((p) => [p.id, statusOf(p.id)])) as Record<number, PinStatus>;
@@ -140,19 +143,19 @@ export default function Page() {
 
   return <main className="app-shell" style={{ "--accent": accent } as CSSProperties}>
     <header className="topbar">
-      <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Detektif Arab</b><small>الاِسْمُ وَالْفِعْلُ</small></span></button>
+      <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
       <nav><button onClick={goHome}>Beranda</button><a href="/guru">Ruang Guru</a></nav>
     </header>
 
     <div key={screen} className="screen-enter">
     {screen === "home" && <section className={`home-stage ${zoom ? "zooming" : ""}`}>
-      <div className="home-scene" style={stageStyle}><HomeScene /></div>
-      <div className="home-overlay">
-        <span className="eyebrow light">PETUALANGAN BAHASA ARAB KELAS VII</span>
-        <h1>Detektif Arab<small>Misi Isim dan Fi&apos;il</small></h1>
-        <p>Jelajahi desa, kunjungi enam pos, kerjakan soal, dan kumpulkan bintang terbanyak!</p>
-        <button className="primary big" onClick={() => zoomThen(50, 48, () => setScreen("identity"))}>Mulai Petualangan <ArrowRight size={20} /></button>
-        <div className="hero-stats"><span><b>6</b> Pos</span><span><b>30</b> Soal</span><span><b>5</b> Bintang</span></div>
+      <div className="home-scene" style={stageStyle}><StartScene /></div>
+      <div className="start-overlay">
+        <div className="start-title"><span className="simfii">Simfii</span><span className="gradcap" aria-hidden="true">🎓</span></div>
+        <div className="wood-sign"><span className="ar" dir="rtl">اِسْمٌ وَفِعْلٌ</span></div>
+        <div className="desc-pill"><i>★</i><p>Ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi&apos;il dengan cara yang menyenangkan!</p><i>★</i></div>
+        <button className="primary big" onClick={() => zoomThen(80, 72, () => setScreen("identity"))}><span className="play">▶</span> Mulai Petualangan</button>
+        <button className="green-btn" onClick={() => setShowHelp(true)}>📖 Cara Bermain</button>
       </div>
     </section>}
 
@@ -167,29 +170,35 @@ export default function Page() {
 
     {screen === "map" && <section className="map-screen">
       <div className={`map-frame ${zoom ? "zooming" : ""}`}>
-        <div className="hud hud-left"><span className="avatar">🕵️</span><span><b>{player?.nickname || "Detektif"}</b><small>{player?.classCode || "UMUM"}</small></span></div>
-        <div className="hud hud-right"><span className="hud-star">★</span><span><b>{totalCorrect} benar</b><small>{completed.length}/{TOTAL_POS} pos · {progress}%</small></span></div>
+        <div className="map-ui map-title"><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
+        <div className="map-ui map-bubble"><span className="avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
+        <div className="map-ui map-progress"><span className="hud-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
         <div className="map-scroll" ref={scrollRef}>
           <div className="map-board" style={stageStyle}>
             <MapScene status={status} />
             {positions.map((item) => {
               const st = status[item.id];
-              const s = completed.includes(item.id) ? scoreOf(item.id) : null;
+              const sc = completed.includes(item.id) ? scoreOf(item.id) : null;
               return <button key={item.id} className={`pin ${st}`} style={{ left: `${item.x}%`, top: `${item.y}%`, height: `${item.h}%`, "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={() => enterPosition(item.id)} aria-label={`Pos ${item.id}: ${item.title}`}>
                 <span className="pin-top">
-                  {s ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={s.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}
-                  <span className="pin-badge">{st === "done" ? <Check size={16} /> : st === "locked" ? <LockKeyhole size={14} /> : item.id}</span>
+                  {sc ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}
+                  <span className="pin-drop"><b>{item.id}</b></span>
                 </span>
-                <span className="pin-label"><small>POS {item.id}</small><b>{item.title}</b></span>
+                <span className="pin-label">
+                  <span className={`pl-icon ${st}`}>{st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={17} /> : "★"}</span>
+                  <span className="pl-text"><b>{item.title}</b><span className="ar" dir="rtl">{item.arabic}</span></span>
+                </span>
               </button>;
             })}
           </div>
         </div>
-        <div className="map-bottom">
-          <button className="primary" onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}>{nextPosition ? <>Lanjutkan Misi: {nextPosition.title} <ArrowRight size={18} /></> : <>Lihat Skor Akhir <ArrowRight size={18} /></>}</button>
+        <button className="map-ui map-book" onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>Ciri isim dan fi&apos;il yang sudah kamu pelajari</small></div><i>→</i></button>
+        <div className="map-ui map-right">
+          <button className="map-sign" onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}>{nextPosition ? <>Jalur Menuju Misi Berikutnya</> : <>Lihat Skor Akhir</>} <ArrowRight size={20} /></button>
+          <div className="map-chest"><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
         </div>
       </div>
-      <div className="map-legend"><span><i className="lg-open" /> Terbuka</span><span><i className="lg-done" /> Selesai</span><span><i className="lg-lock" /> Terkunci</span><span>Klik bangunan untuk masuk</span></div>
+      <div className="map-legend"><span><i className="lg-open" /> Terbuka</span><span><i className="lg-done" /> Selesai</span><span><i className="lg-lock" /> Terkunci</span><span>Klik rumah atau bangunan untuk masuk</span></div>
     </section>}
 
     {screen === "learn" && slide && <section className="content-section">
@@ -295,6 +304,26 @@ export default function Page() {
     </section>}
     </div>
 
-    <footer><b>Detektif Arab</b><span className="ar" dir="rtl">الاِسْمُ وَالْفِعْلُ</span><small>Media pembelajaran bahasa Arab • Kelas VII</small></footer>
+    {showHelp && <div className="modal-back" onClick={() => setShowHelp(false)}><div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Cara bermain">
+      <button className="modal-x" onClick={() => setShowHelp(false)} aria-label="Tutup"><X size={18} /></button>
+      <h2>📖 Cara Bermain</h2>
+      <ol className="howto">
+        <li><b>Isi nama detektif.</b> Tulis nama panggilan dan kode kelas, lalu masuk ke desa.</li>
+        <li><b>Kunjungi rumah bernomor.</b> Klik bangunan di peta. Pos dibuka berurutan dari 1 sampai 6.</li>
+        <li><b>Pos 1 sampai 3: baca materi.</b> Pelajari isim, fi&apos;il, dan perbedaannya, lalu kerjakan soal evaluasi.</li>
+        <li><b>Lihat kunci jawaban.</b> Setiap pos menampilkan jawabanmu, jawaban yang benar, dan alasannya.</li>
+        <li><b>Pos 4 dan 5: uji dirimu.</b> Soal evaluasi menyeluruh, lalu soal akhir yang lebih sulit.</li>
+        <li><b>Pos 6: kumpulkan bintang.</b> Lihat skor tiap pos dan nilai akhir dari 100.</li>
+      </ol>
+      <button className="primary full" onClick={() => setShowHelp(false)}>Siap, Ayo Mulai!</button>
+    </div></div>}
+    {showSummary && <div className="modal-back" onClick={() => setShowSummary(false)}><div className="modal wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Ringkasan materi">
+      <button className="modal-x" onClick={() => setShowSummary(false)} aria-label="Tutup"><X size={18} /></button>
+      <h2>📖 Ringkasan Materi</h2>
+      <div className="table-scroll"><table className="diff-table"><thead><tr><th>Aspek</th><th className="isim">Isim</th><th className="fiil">Fi&apos;il</th></tr></thead>
+        <tbody>{tableRows.map((row) => <tr key={row.aspect}><th><Mixed text={row.aspect} /></th><td><Mixed text={row.isim} /></td><td><Mixed text={row.fiil} /></td></tr>)}</tbody></table></div>
+    </div></div>}
+
+    <footer><b>Simfii</b><span className="ar" dir="rtl">اِسْمٌ وَفِعْلٌ</span><small>Media pembelajaran bahasa Arab • Kelas VII</small></footer>
   </main>;
 }

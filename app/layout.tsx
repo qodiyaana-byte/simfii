@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Detektif Arab — Misi Isim dan Fi'il",
+  title: "Simfii — Isim dan Fi'il",
   description: "Petualangan interaktif bahasa Arab kelas VII untuk memahami isim dan fi'il melalui enam pos.",
 };
 
