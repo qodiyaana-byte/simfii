@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-react";
 import { questions } from "@/lib/questions";
 import { mindmapBranches, positions, slides, tableRows, tagLabels, type Seg } from "@/lib/content";
 import { Mixed } from "./mixed";
-import { MapScene, StartScene, type PinStatus } from "./scenery";
+import { StartScene, type PinStatus } from "./scenery";
+import { MAP_H, MAP_W, pct, posLayout, type Box } from "@/lib/maplayout";
 
 type Screen = "home" | "identity" | "map" | "learn" | "quiz" | "review" | "result";
 type Player = { id: string; nickname: string; classCode: string };
@@ -12,6 +13,8 @@ type Player = { id: string; nickname: string; classCode: string };
 const TOTAL_POS = positions.length;
 const QUIZ_POS = 5;
 const ZOOM_MS = 950;
+const boxStyle = (b: Box): CSSProperties => ({ left: `${pct.left(b)}%`, top: `${pct.top(b)}%`, width: `${pct.width(b)}%`, height: `${pct.height(b)}%` });
+const ui = (l: number, t: number, w: number, h: number): CSSProperties => ({ left: `${(l / MAP_W) * 100}%`, top: `${(t / MAP_H) * 100}%`, width: `${(w / MAP_W) * 100}%`, height: `${(h / MAP_H) * 100}%` });
 
 function Stars({ value, size = 56 }: { value: number; size?: number }) {
   const filled = Math.max(0, Math.min(5, (value / 100) * 5));
@@ -78,7 +81,7 @@ export default function Page() {
   useEffect(() => {
     if (screen !== "map") return;
     const box = scrollRef.current;
-    const pin = box?.querySelector<HTMLElement>(".pin.next, .pin.open");
+    const pin = box?.querySelector<HTMLElement>(".hit.next, .hit.open");
     if (box && pin) box.scrollLeft = pin.offsetLeft - box.clientWidth / 2;
   }, [screen, completed]);
 
@@ -170,35 +173,36 @@ export default function Page() {
 
     {screen === "map" && <section className="map-screen">
       <div className={`map-frame ${zoom ? "zooming" : ""}`}>
-        <div className="map-ui map-title"><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
-        <div className="map-ui map-bubble"><span className="avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
-        <div className="map-ui map-progress"><span className="hud-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
         <div className="map-scroll" ref={scrollRef}>
-          <div className="map-board" style={stageStyle}>
-            <MapScene status={status} />
+          <div className="map-board photo" style={stageStyle}>
+            <img className="map-photo" src="/images/peta-desa.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
+            <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
+            <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
+            <div className="mp mp-ui mp-progress" style={ui(1062, 36, 386, 90)}><span className="mp-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
+            <button className="mp mp-ui mp-gear" style={ui(1450, 44, 76, 76)} onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button>
             {positions.map((item) => {
+              const L = posLayout[item.id];
               const st = status[item.id];
               const sc = completed.includes(item.id) ? scoreOf(item.id) : null;
-              return <button key={item.id} className={`pin ${st}`} style={{ left: `${item.x}%`, top: `${item.y}%`, height: `${item.h}%`, "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={() => enterPosition(item.id)} aria-label={`Pos ${item.id}: ${item.title}`}>
-                <span className="pin-top">
-                  {sc ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}
-                  <span className="pin-drop"><b>{item.id}</b></span>
-                </span>
-                <span className="pin-label">
-                  <span className={`pl-icon ${st}`}>{st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={17} /> : "★"}</span>
+              const go = () => enterPosition(item.id);
+              return <Fragment key={item.id}>
+                <button className={`mp hit ${st}`} style={{ ...boxStyle(L.hit), "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={go} aria-label={`Pos ${item.id}: ${item.title}`}>
+                  {sc && !L.drop ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}
+                </button>
+                {L.drop ? <button className={`mp mp-dropwrap ${st}`} style={{ left: `${(L.drop.x / MAP_W) * 100}%`, top: `${(L.drop.y / MAP_H) * 100}%`, "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={go} tabIndex={-1} aria-hidden="true">{sc ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}<span className="pin-drop"><b>{item.id}</b></span></button> : null}
+                <button className={`mp mp-pill ${st}`} style={boxStyle(L.pill)} disabled={st === "locked"} onClick={go} tabIndex={-1}>
+                  <span className={`pl-icon ${st}`}>{st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={18} /> : "★"}</span>
                   <span className="pl-text"><b>{item.title}</b><span className="ar" dir="rtl">{item.arabic}</span></span>
-                </span>
-              </button>;
+                </button>
+              </Fragment>;
             })}
+            <button className="mp mp-ui mp-book" style={ui(18, 842, 388, 128)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>Ciri isim dan fi&apos;il yang sudah kamu pelajari</small></div><i>→</i></button>
+            <button className="mp mp-ui mp-sign" style={ui(1268, 736, 214, 128)} onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}><span>{nextPosition ? "Jalur Menuju Misi Berikutnya" : "Lihat Skor Akhir"}</span><ArrowRight size={22} /></button>
+            <div className="mp mp-ui mp-chest" style={ui(1290, 876, 238, 102)}><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
           </div>
         </div>
-        <button className="map-ui map-book" onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>Ciri isim dan fi&apos;il yang sudah kamu pelajari</small></div><i>→</i></button>
-        <div className="map-ui map-right">
-          <button className="map-sign" onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}>{nextPosition ? <>Jalur Menuju Misi Berikutnya</> : <>Lihat Skor Akhir</>} <ArrowRight size={20} /></button>
-          <div className="map-chest"><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
-        </div>
       </div>
-      <div className="map-legend"><span><i className="lg-open" /> Terbuka</span><span><i className="lg-done" /> Selesai</span><span><i className="lg-lock" /> Terkunci</span><span>Klik rumah atau bangunan untuk masuk</span></div>
+      <div className="map-legend"><span><i className="lg-open" /> Terbuka</span><span><i className="lg-done" /> Selesai</span><span><i className="lg-lock" /> Terkunci</span><span>Klik rumah atau landmark untuk masuk</span></div>
     </section>}
 
     {screen === "learn" && slide && <section className="content-section">

@@ -12,7 +12,7 @@ export type Slide =
 
 export type MapPosition = {
   id: number; title: string; subtitle: string; icon: string; arabic: string;
-  x: number; y: number; h: number; // pusat dan tinggi area klik (persen terhadap peta)
+  x: number; y: number; // pusat area klik (persen terhadap peta), dipakai untuk titik zoom
   color: string;
 };
 
@@ -23,12 +23,12 @@ export const tagLabels: Record<FiilTag, string> = {
 };
 
 export const positions: MapPosition[] = [
-  { id: 1, title: "Rumah Isim", subtitle: "Definisi, ciri, dan contoh isim", icon: "🏠", arabic: "الاِسْمُ", x: 17, y: 60.7, h: 24.3, color: "#f5a623" },
-  { id: 2, title: "Rumah Fi'il", subtitle: "Definisi, tanda, dan contoh fi'il", icon: "🏡", arabic: "الْفِعْلُ", x: 32, y: 35.3, h: 23.7, color: "#1e88e5" },
-  { id: 3, title: "Balai Peta Konsep", subtitle: "Perbedaan isim dan fi'il", icon: "🗺️", arabic: "الْفَرْقُ", x: 52, y: 60.4, h: 27.9, color: "#8e44ad" },
-  { id: 4, title: "Kantor Detektif", subtitle: "Evaluasi seluruh materi", icon: "🔎", arabic: "التَّقْوِيمُ", x: 66, y: 32.1, h: 27.1, color: "#e03a5a" },
-  { id: 5, title: "Menara Tantangan", subtitle: "Soal akhir yang lebih sulit", icon: "🏰", arabic: "التَّحَدِّي", x: 80, y: 51, h: 40.9, color: "#00a38c" },
-  { id: 6, title: "Aula Bintang", subtitle: "Skor setiap pos dan nilai akhir", icon: "🏆", arabic: "النَّتِيجَةُ", x: 90.5, y: 35.4, h: 26.3, color: "#f2b01e" },
+  { id: 1, title: "Rumah Isim", subtitle: "Definisi, ciri, dan contoh isim", icon: "🏠", arabic: "الاِسْمُ", x: 15.6, y: 34.2, color: "#f5a623" },
+  { id: 2, title: "Rumah Fi'il", subtitle: "Definisi, tanda, dan contoh fi'il", icon: "🏡", arabic: "الْفِعْلُ", x: 46, y: 30.8, color: "#1e88e5" },
+  { id: 3, title: "Balai Peta Konsep", subtitle: "Perbedaan isim dan fi'il", icon: "🗺️", arabic: "الْفَرْقُ", x: 82, y: 38.6, color: "#8e44ad" },
+  { id: 4, title: "Kantor Detektif", subtitle: "Evaluasi seluruh materi", icon: "🔎", arabic: "التَّقْوِيمُ", x: 40.5, y: 62.5, color: "#e03a5a" },
+  { id: 5, title: "Taman Tantangan", subtitle: "Soal akhir yang lebih sulit", icon: "⛲", arabic: "التَّحَدِّي", x: 68, y: 70.8, color: "#00a38c" },
+  { id: 6, title: "Dermaga Bintang", subtitle: "Skor setiap pos dan nilai akhir", icon: "⛵", arabic: "النَّتِيجَةُ", x: 65.4, y: 88.4, color: "#f2b01e" },
 ];
 
 export const slides: Record<number, Slide[]> = {
