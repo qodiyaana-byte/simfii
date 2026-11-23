@@ -1,10 +1,10 @@
 "use client";
-import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-react";
 import { questions } from "@/lib/questions";
 import { mindmapBranches, positions, slides, tableRows, tagLabels, type Seg } from "@/lib/content";
 import { Mixed } from "./mixed";
-import { StartScene, type PinStatus } from "./scenery";
+import { type PinStatus } from "./scenery";
 import { MAP_H, MAP_W, pct, posLayout, type Box } from "@/lib/maplayout";
 
 type Screen = "home" | "identity" | "map" | "learn" | "quiz" | "review" | "result";
@@ -13,6 +13,10 @@ type Player = { id: string; nickname: string; classCode: string };
 const TOTAL_POS = positions.length;
 const QUIZ_POS = 5;
 const ZOOM_MS = 950;
+const STAGE_W = 1280;
+const STAGE_H = 720;
+// gambar peta menempati bagian tengah kanvas 16:9 (sisi diperluas), sehingga titik zoom perlu dikonversi
+const mapOrigin = (x: number) => 7.8125 + x * 0.84375;
 const boxStyle = (b: Box): CSSProperties => ({ left: `${pct.left(b)}%`, top: `${pct.top(b)}%`, width: `${pct.width(b)}%`, height: `${pct.height(b)}%` });
 const ui = (l: number, t: number, w: number, h: number): CSSProperties => ({ left: `${(l / MAP_W) * 100}%`, top: `${(t / MAP_H) * 100}%`, width: `${(w / MAP_W) * 100}%`, height: `${(h / MAP_H) * 100}%` });
 
@@ -46,13 +50,27 @@ export default function Page() {
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
+  const [ready, setReady] = useState(false);
+  const [portrait, setPortrait] = useState(false);
 
   const posQuestions = useMemo(() => questions.filter((item) => item.position === position), [position]);
   const currentQuestion = posQuestions[qIndex];
   const posSlides = slides[position] || [];
   const slide = posSlides[slideIndex];
   const accent = positions[Math.min(position, TOTAL_POS) - 1].color;
+
+  // Kanvas tetap 1280 x 720 (16:9), diperbesar atau diperkecil agar muat di layar apa pun.
+  useEffect(() => {
+    const fit = () => {
+      setScale(Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
+      setPortrait(window.innerWidth < window.innerHeight && window.innerWidth < 700);
+      setReady(true);
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
 
   const isUnlocked = (id: number) => id === 1 || completed.includes(id - 1);
   const scoreOf = (pos: number) => {
@@ -78,12 +96,6 @@ export default function Page() {
     window.setTimeout(() => { then(); setZoom(null); }, ZOOM_MS);
   };
 
-  useEffect(() => {
-    if (screen !== "map") return;
-    const box = scrollRef.current;
-    const pin = box?.querySelector<HTMLElement>(".hit.next, .hit.open");
-    if (box && pin) box.scrollLeft = pin.offsetLeft - box.clientWidth / 2;
-  }, [screen, completed]);
 
   const startPlayer = async () => {
     if (!nickname.trim()) return;
@@ -120,7 +132,7 @@ export default function Page() {
   };
   const enterPosition = (id: number) => {
     const target = positions[id - 1];
-    if (isUnlocked(id)) zoomThen(target.x, target.y, () => openPosition(id));
+    if (isUnlocked(id)) zoomThen(mapOrigin(target.x), target.y, () => openPosition(id));
   };
 
   const submitAnswer = () => {
@@ -144,22 +156,21 @@ export default function Page() {
   const posCheer = (p: number) => p >= 90 ? "Luar biasa! Kamu menguasai materi ini. 🌟" : p >= 70 ? "Hebat! Sedikit lagi sempurna. 🎉" : p >= 50 ? "Lumayan! Baca alasannya, lalu coba lagi nanti. 💡" : "Tidak apa-apa. Pelajari kunci jawabannya dan kamu pasti bisa! 💪";
   const stageStyle = zoom ? ({ transformOrigin: `${zoom.x}% ${zoom.y}%` } as CSSProperties) : undefined;
 
-  return <main className="app-shell" style={{ "--accent": accent } as CSSProperties}>
-    <header className="topbar">
+  return <main className="viewport" style={{ "--accent": accent } as CSSProperties}>
+    {portrait && <div className="rotate-hint">📱 Putar HP ke mode landscape agar tampilan 16:9 lebih jelas</div>}
+    <div className="stage" style={{ transform: `translate(-50%, -50%) scale(${scale})`, visibility: ready ? "visible" : "hidden" }}>
+    {screen !== "home" && screen !== "map" && <header className="topbar">
       <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
-      <nav><button onClick={goHome}>Beranda</button><a href="/guru">Ruang Guru</a></nav>
-    </header>
+      <nav><button onClick={goHome}>{player ? "Peta" : "Beranda"}</button><a href="/guru">Ruang Guru</a></nav>
+    </header>}
 
-    <div key={screen} className="screen-enter">
+    <div key={screen} className={`screen-enter screen-${screen}`}>
     {screen === "home" && <section className={`home-stage ${zoom ? "zooming" : ""}`}>
-      <div className="home-scene" style={stageStyle}><StartScene /></div>
-      <div className="start-overlay">
-        <div className="start-title"><span className="simfii">Simfii</span><span className="gradcap" aria-hidden="true">🎓</span></div>
-        <div className="wood-sign"><span className="ar" dir="rtl">اِسْمٌ وَفِعْلٌ</span></div>
-        <div className="desc-pill"><i>★</i><p>Ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi&apos;il dengan cara yang menyenangkan!</p><i>★</i></div>
-        <button className="primary big" onClick={() => zoomThen(80, 72, () => setScreen("identity"))}><span className="play">▶</span> Mulai Petualangan</button>
-        <button className="green-btn" onClick={() => setShowHelp(true)}>📖 Cara Bermain</button>
-      </div>
+      <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Simfii: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
+      <button className="hs hs-start" aria-label="Mulai Petualangan" onClick={() => zoomThen(70, 72, () => setScreen("identity"))} />
+      <button className="hs hs-q" aria-label="Cara Bermain" onClick={() => setShowHelp(true)}>?</button>
+      <button className="hs hs-help" onClick={() => setShowHelp(true)}><span className="hh-icon">📖</span><b>Cara Bermain</b><i>→</i></button>
+      <a className="hs hs-guru" href="/guru">Ruang Guru</a>
     </section>}
 
     {screen === "identity" && <section className="center-panel">
@@ -173,9 +184,9 @@ export default function Page() {
 
     {screen === "map" && <section className="map-screen">
       <div className={`map-frame ${zoom ? "zooming" : ""}`}>
-        <div className="map-scroll" ref={scrollRef}>
-          <div className="map-board photo" style={stageStyle}>
-            <img className="map-photo" src="/images/peta-desa.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
+        <div className="map-board photo" style={stageStyle}>
+          <img className="map-photo" src="/images/peta-desa-16x9.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
+          <div className="map-overlay">
             <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
             <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
             <div className="mp mp-ui mp-progress" style={ui(1062, 36, 386, 90)}><span className="mp-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
@@ -198,17 +209,16 @@ export default function Page() {
             })}
             <button className="mp mp-ui mp-book" style={ui(18, 842, 388, 128)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>Ciri isim dan fi&apos;il yang sudah kamu pelajari</small></div><i>→</i></button>
             <button className="mp mp-ui mp-sign" style={ui(1268, 736, 214, 128)} onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}><span>{nextPosition ? "Jalur Menuju Misi Berikutnya" : "Lihat Skor Akhir"}</span><ArrowRight size={22} /></button>
-            <div className="mp mp-ui mp-chest" style={ui(1290, 876, 238, 102)}><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
+            <div className="mp mp-ui mp-chest" style={ui(1300, 878, 232, 100)}><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
           </div>
         </div>
       </div>
-      <div className="map-legend"><span><i className="lg-open" /> Terbuka</span><span><i className="lg-done" /> Selesai</span><span><i className="lg-lock" /> Terkunci</span><span>Klik rumah atau landmark untuk masuk</span></div>
     </section>}
 
     {screen === "learn" && slide && <section className="content-section">
       <button className="back-link" onClick={() => setScreen("map")}><ArrowLeft size={16} /> Kembali ke peta</button>
       <div className="learning-heading"><div className="lh-icon">{positions[position - 1].icon}</div><div><span className="eyebrow accent">POS {position} · {positions[position - 1].title.toUpperCase()}</span><h2>{slide.title}</h2></div><span className="progress-label">Materi {slideIndex + 1}/{posSlides.length}</span></div>
-      <div className="slide-card">
+      <div className={`slide-card ${slide.kind === "signs" && slide.tag ? slide.tag : ""}`}>
         {slide.kind === "definition" && <div className="definition">
           <div className="ar arabic-big" dir="rtl">{slide.arabic}</div>
           <p className="definition-text">{slide.text}</p>
@@ -217,9 +227,10 @@ export default function Page() {
             <span className="ar" dir="rtl">{ex.arabic}</span><small>{ex.meaning}</small></div>)}</div>
         </div>}
         {slide.kind === "signs" && <div>
+          {slide.tag && <div className={`tag-banner ${slide.tag}`}>{tagLabels[slide.tag]}</div>}
           <p className="slide-intro">{slide.intro}</p>
           <div className="legend"><span><i className="dot red" /> Merah = tanda / ciri</span><span><i className="dot blue" /> Biru = kata aslinya</span></div>
-          <div className="sign-grid">{slide.items.map((item) => <div className="sign-card" key={item.name}>
+          <div className={`sign-grid ${slide.tag ?? ""}`}>{slide.items.map((item) => <div className="sign-card" key={item.name}>
             <b>{item.name}</b><small><Mixed text={item.rule} /></small>
             <div className="sign-example"><Segs segs={item.segs} /><em>{item.meaning}</em></div>
             <div className="sign-part">Bagian merah: <span className="ar hl" dir="rtl">{item.part}</span></div>
@@ -328,6 +339,6 @@ export default function Page() {
         <tbody>{tableRows.map((row) => <tr key={row.aspect}><th><Mixed text={row.aspect} /></th><td><Mixed text={row.isim} /></td><td><Mixed text={row.fiil} /></td></tr>)}</tbody></table></div>
     </div></div>}
 
-    <footer><b>Simfii</b><span className="ar" dir="rtl">اِسْمٌ وَفِعْلٌ</span><small>Media pembelajaran bahasa Arab • Kelas VII</small></footer>
+    </div>
   </main>;
 }

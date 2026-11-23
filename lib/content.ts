@@ -5,7 +5,7 @@ export type Sign = { name: string; rule: string; segs: Seg[]; part: string; mean
 export type WordGroup = { title: string; note?: string; tag?: FiilTag; words: Word[] };
 export type Slide =
   | { kind: "definition"; title: string; arabic: string; text: string; examples: Word[] }
-  | { kind: "signs"; title: string; intro: string; items: Sign[] }
+  | { kind: "signs"; title: string; intro: string; items: Sign[]; tag?: FiilTag }
   | { kind: "words"; title: string; intro: string; groups: WordGroup[] }
   | { kind: "mindmap"; title: string }
   | { kind: "table"; title: string };
@@ -74,12 +74,33 @@ export const slides: Record<number, Slide[]> = {
       ],
     },
     {
-      kind: "signs", title: "Tanda-tanda Fi'il", intro: "Perhatikan bagian berwarna merah. Itulah tanda yang membuat kata tersebut dikenali sebagai fi'il.",
+      kind: "signs", tag: "madhi", title: "Tanda-tanda Fi'il Madhi",
+      intro: "Fi'il madhi menunjukkan pekerjaan yang sudah terjadi (lampau). Perhatikan bagian merah sebagai tandanya.",
       items: [
-        { name: "1. Didahului قَدْ", rule: "قَدْ berada sebelum fi'il.", segs: [{ t: "قَدْ", hl: true }, { t: " كَتَبَ" }], part: "قَدْ", meaning: "sungguh telah menulis" },
+        { name: "1. Bertemu ta' ta'nits sakinah", rule: "Akhiran تْ menandakan pelaku perempuan (dia).", segs: [{ t: "كَتَبَ" }, { t: "تْ", hl: true }], part: "تْ", meaning: "dia (perempuan) telah menulis" },
+        { name: "2. Bertemu ta' fa'il", rule: "Akhiran تُ (aku), تَ (kamu laki-laki), تِ (kamu perempuan).", segs: [{ t: "كَتَبْ" }, { t: "تُ", hl: true }], part: "تُ", meaning: "aku telah menulis" },
+        { name: "3. Bertemu nun niswah", rule: "Akhiran نَ menandakan pelaku banyak perempuan (mereka).", segs: [{ t: "كَتَبْ" }, { t: "نَ", hl: true }], part: "نَ", meaning: "mereka (perempuan) telah menulis" },
+        { name: "4. Didahului قَدْ", rule: "قَدْ menguatkan makna sudah terjadi.", segs: [{ t: "قَدْ", hl: true }, { t: " كَتَبَ" }], part: "قَدْ", meaning: "sungguh telah menulis" },
+      ],
+    },
+    {
+      kind: "signs", tag: "mudhari", title: "Tanda-tanda Fi'il Mudhari'",
+      intro: "Fi'il mudhari' menunjukkan pekerjaan yang sedang atau akan terjadi. Perhatikan bagian merah sebagai tandanya.",
+      items: [
+        { name: "1. Diawali huruf mudhara'ah", rule: "Huruf أ ن ي ت di awal kata. Contoh lain: أَكْتُبُ (aku menulis), نَكْتُبُ (kami menulis), تَكْتُبُ (kamu menulis).", segs: [{ t: "يَ", hl: true }, { t: "كْتُبُ" }], part: "يَ", meaning: "dia (laki-laki) menulis" },
         { name: "2. Didahului سَ atau سَوْفَ", rule: "Menunjukkan waktu yang akan datang.", segs: [{ t: "سَ", hl: true }, { t: "يَكْتُبُ" }], part: "سَ", meaning: "akan menulis" },
-        { name: "3. Bertemu ta' ta'nits sakinah", rule: "Akhiran تْ menandakan pelaku perempuan.", segs: [{ t: "كَتَبَ" }, { t: "تْ", hl: true }], part: "تْ", meaning: "dia (perempuan) telah menulis" },
-        { name: "4. Bertemu ta' fa'il", rule: "Akhiran تُ menandakan pelaku orang pertama.", segs: [{ t: "كَتَبْ" }, { t: "تُ", hl: true }], part: "تُ", meaning: "aku telah menulis" },
+        { name: "3. Didahului قَدْ", rule: "قَدْ di depan mudhari' bermakna kadang-kadang.", segs: [{ t: "قَدْ", hl: true }, { t: " يَكْتُبُ" }], part: "قَدْ", meaning: "kadang menulis" },
+        { name: "4. Didahului لَمْ atau لَنْ", rule: "لَمْ berarti belum atau tidak (lampau), لَنْ berarti tidak akan.", segs: [{ t: "لَمْ", hl: true }, { t: " يَكْتُبْ" }], part: "لَمْ", meaning: "dia belum menulis" },
+      ],
+    },
+    {
+      kind: "signs", tag: "amr", title: "Tanda-tanda Fi'il Amr",
+      intro: "Fi'il amr menunjukkan perintah untuk melakukan pekerjaan. Perhatikan bagian merah sebagai tandanya.",
+      items: [
+        { name: "1. Bermakna perintah", rule: "Meminta pekerjaan dilakukan, tanpa tanda waktu di depannya.", segs: [{ t: "اُكْتُبْ", hl: true }], part: "اُكْتُبْ", meaning: "tulislah!" },
+        { name: "2. Dapat bertemu ya' mukhathabah", rule: "Akhiran ي dipakai untuk memerintah perempuan.", segs: [{ t: "اُكْتُبِ" }, { t: "ي", hl: true }], part: "ي", meaning: "tulislah (wahai perempuan)!" },
+        { name: "3. Berakhiran sukun", rule: "Akhir fi'il amr untuk satu laki-laki dibaca sukun.", segs: [{ t: "اِقْرَ" }, { t: "أْ", hl: true }], part: "أْ", meaning: "bacalah!" },
+        { name: "4. Dibentuk dari mudhari'", rule: "Huruf mudhara'ah dibuang dan diganti hamzah washal. Contoh: يَذْهَبُ menjadi اِذْهَبْ.", segs: [{ t: "اِ", hl: true }, { t: "ذْهَبْ" }], part: "اِ", meaning: "pergilah!" },
       ],
     },
     {

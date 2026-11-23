@@ -7,13 +7,13 @@ Media pembelajaran bahasa Arab kelas VII dengan enam pos petualangan yang fokus 
 | Pos | Isi | Soal |
 | --- | --- | --- |
 | 1. Rumah Isim | Definisi isim, ciri-ciri, contoh mufradat beserta arti, lalu evaluasi | 5 |
-| 2. Rumah Fi'il | Definisi fi'il, tanda-tanda, contoh mufradat beserta arti, lalu evaluasi | 5 |
+| 2. Rumah Fi'il | Definisi fi'il, tanda fi'il madhi, tanda fi'il mudhari', tanda fi'il amr (masing-masing satu halaman), mufradat per jenis fi'il, lalu evaluasi | 5 |
 | 3. Balai Peta Konsep | Peta konsep perbedaan isim dan fi'il, tabel perbedaan, lalu evaluasi | 7 |
 | 4. Kantor Detektif | Evaluasi keseluruhan materi | 6 |
 | 5. Taman Tantangan | Soal akhir, satu tingkat lebih sulit dari Pos 4 | 7 |
 | 6. Dermaga Bintang | Skor tiap pos, nilai akhir /100, dan bintang | - |
 
-Halaman awal: karakter detektif, judul Simfii, tombol Mulai Petualangan, dan Cara Bermain. Peta memakai gambar `public/images/peta-desa.jpg` sebagai latar. Pos 1 sampai 4 adalah rumah, Pos 5 taman dengan air mancur, dan Pos 6 dermaga perahu. Tata letak label ada di `lib/maplayout.ts`. Setiap pos bisa diklik, dengan transisi zoom saat masuk. Tidak ada fitur audio.
+Seluruh situs berukuran kanvas tetap 1280 x 720 (16:9) yang otomatis diperbesar atau diperkecil mengikuti layar; di HP sebaiknya dipakai mode landscape. Halaman awal memakai gambar `public/images/halaman-awal.jpg` (karakter detektif, judul Simfii, tombol Mulai Petualangan) dengan papan Cara Bermain. Peta memakai gambar `public/images/peta-desa-16x9.jpg` sebagai latar. Pos 1 sampai 4 adalah rumah, Pos 5 taman dengan air mancur, dan Pos 6 dermaga perahu. Tata letak label ada di `lib/maplayout.ts`. Setiap pos bisa diklik, dengan transisi zoom saat masuk. Tidak ada fitur audio.
 Setelah setiap evaluasi tampil kunci jawaban: jawaban siswa, jawaban yang benar, dan alasannya.
 Nilai akhir = jawaban benar dari 30 soal dibagi 30 dikali 100. Setiap 20 poin mengisi satu bintang (5 bintang = 100).
 Teks soal dan alasan ada di `lib/questions.ts`; materi, peta konsep, dan tabel ada di `lib/content.ts`.

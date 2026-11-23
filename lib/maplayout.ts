@@ -16,7 +16,7 @@ export const posLayout: Record<number, PosLayout> = {
   3: { hit: { cx: 1260, cy: 395, w: 350, h: 280 }, pill: { cx: 1237, cy: 530, w: 292, h: 84 } },
   4: { hit: { cx: 622, cy: 640, w: 275, h: 250 }, pill: { cx: 642, cy: 775, w: 292, h: 88 } },
   5: { hit: { cx: 1045, cy: 735, w: 320, h: 170 }, pill: { cx: 1090, cy: 815, w: 280, h: 84 }, drop: { x: 1045, y: 700 } },
-  6: { hit: { cx: 1005, cy: 930, w: 170, h: 110 }, pill: { cx: 1157, cy: 945, w: 268, h: 84 }, drop: { x: 900, y: 905 } },
+  6: { hit: { cx: 1005, cy: 930, w: 170, h: 110 }, pill: { cx: 1148, cy: 945, w: 272, h: 84 }, drop: { x: 900, y: 905 } },
 };
 
 export const pct = {
