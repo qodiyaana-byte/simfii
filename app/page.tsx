@@ -204,14 +204,14 @@ export default function Page() {
   const posCheer = (p: number) => p >= 90 ? "Luar biasa! Kamu menguasai materi ini. 🌟" : p >= 70 ? "Hebat! Sedikit lagi sempurna. 🎉" : p >= 50 ? "Lumayan! Baca alasannya, lalu coba lagi nanti. 💡" : "Tidak apa-apa. Pelajari kunci jawabannya dan kamu pasti bisa! 💪";
   const stageStyle = zoom ? ({ transformOrigin: `${zoom.x}% ${zoom.y}%` } as CSSProperties) : undefined;
 
-  return <main className="viewport" style={{ "--accent": accent } as CSSProperties}>
-    {portrait && <div className="rotate-hint">📱 Putar HP ke mode landscape agar tampilan 16:9 lebih jelas</div>}
-    <div className="stage" style={{ transform: `translate(-50%, -50%) scale(${scale})`, visibility: ready ? "visible" : "hidden" }}>
-    {screen !== "home" && screen !== "map" && <header className="topbar">
+  const imageScreen = screen === "home" || screen === "map";
+  const topbar = (
+    <header className="topbar">
       <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
       <nav><button onClick={goHome}>{player ? "Peta" : "Beranda"}</button>{player && <button onClick={openDashboard}>📊 Dashboard</button>}<a href="/guru">Ruang Guru</a></nav>
-    </header>}
-
+    </header>
+  );
+  const body = (
     <div key={screen} className={`screen-enter screen-${screen}`}>
     {screen === "home" && <section className={`home-stage ${zoom ? "zooming" : ""}`}>
       <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Simfii: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
@@ -372,7 +372,9 @@ export default function Page() {
       <div className="hero-actions centered"><button className="primary" onClick={openDashboard}>📊 Dashboard Saya</button><button className="secondary" onClick={() => setScreen("map")}>Lihat Peta Desa</button><button className="secondary" onClick={resetAdventure}><RotateCcw size={16} /> Ulangi Petualangan</button></div>
     </section>}
     </div>
-
+  );
+  const modals = (
+    <>
     {showHelp && <div className="modal-back" onClick={() => setShowHelp(false)}><div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Cara bermain">
       <button className="modal-x" onClick={() => setShowHelp(false)} aria-label="Tutup"><X size={18} /></button>
       <h2>📖 Cara Bermain</h2>
@@ -392,7 +394,25 @@ export default function Page() {
       <div className="table-scroll"><table className="diff-table"><thead><tr><th>Aspek</th><th className="isim">Isim</th><th className="fiil">Fi&apos;il</th></tr></thead>
         <tbody>{tableRows.map((row) => <tr key={row.aspect}><th><Mixed text={row.aspect} /></th><td><Mixed text={row.isim} /></td><td><Mixed text={row.fiil} /></td></tr>)}</tbody></table></div>
     </div></div>}
+    </>
+  );
 
-    </div>
+  // Halaman awal dan peta memakai gambar 16:9: dipasang utuh di tengah layar dengan latar kabur di sisi.
+  if (imageScreen) {
+    const bg = screen === "home" ? "/images/halaman-awal.jpg" : "/images/peta-desa-16x9.jpg";
+    return <main className="viewport" style={{ "--accent": accent, "--bg": `url(${bg})` } as CSSProperties}>
+      {portrait && <div className="rotate-hint">📱 Putar HP ke mode landscape agar gambar tampil lebih besar dan jelas</div>}
+      <div className="stage" style={{ transform: `translate(-50%, -50%) scale(${scale})`, visibility: ready ? "visible" : "hidden" }}>
+        {body}
+        {modals}
+      </div>
+    </main>;
+  }
+
+  // Halaman lain mengikuti lebar layar dan digulir seperti halaman web biasa.
+  return <main className="page" style={{ "--accent": accent } as CSSProperties}>
+    {topbar}
+    {body}
+    {modals}
   </main>;
 }

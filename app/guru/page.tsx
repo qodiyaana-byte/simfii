@@ -1,6 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { StageFrame } from "../stage";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Mixed } from "../mixed";
 import { questions } from "@/lib/questions";
 import {
@@ -59,6 +58,10 @@ function downloadCsv(students: Student[], kkm: number) {
   const a = document.createElement("a");
   a.href = url; a.download = `rekap-simfii-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
   URL.revokeObjectURL(url);
+}
+
+function Shell({ children }: { children: ReactNode }) {
+  return <main className="page td-page" style={{ "--accent": "#1e88e5" } as CSSProperties}>{children}</main>;
 }
 
 export default function TeacherDashboard() {
@@ -140,7 +143,7 @@ export default function TeacherDashboard() {
 
   /* ===== MASUK ===== */
   if (!rows) {
-    return <StageFrame>
+    return <Shell>
       <header className="topbar"><a className="brand" href="/"><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>Dashboard Guru</small></span></a><nav><a href="/">Ke Aplikasi</a></nav></header>
       <div className="screen-enter"><div className="td-login">
         <div className="td-login-icon">📊</div><h1>Dashboard Guru</h1>
@@ -152,12 +155,12 @@ export default function TeacherDashboard() {
         <button className="secondary full" onClick={() => { setRows(makeDemoReport()); setDemo(true); setToken("demo"); }}>👀 Lihat contoh tampilan (data contoh)</button>
         <small>Token diisi di Vercel pada variabel <code>TEACHER_DASHBOARD_TOKEN</code>.</small>
       </div></div>
-    </StageFrame>;
+    </Shell>;
   }
 
   /* ===== DASHBOARD ===== */
   const attemptData = detail ? detail.attempts[Math.min(detailAttempt, detail.attempts.length - 1)] : null;
-  return <StageFrame>
+  return <Shell>
     <header className="topbar td-top">
       <a className="brand" href="/"><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>Dashboard Guru</small></span></a>
       <div className="td-actions">
@@ -251,5 +254,5 @@ export default function TeacherDashboard() {
           <p className="your">Jawaban murid: <b><Mixed text={a.answer || "(kosong)"} /></b></p>
           {!a.correct && <><p className="right">Jawaban benar: <b><Mixed text={q.answer} /></b></p><p className="why">💡 <Mixed text={q.reason} /></p></>}</div></div>; })}</div>
     </div></div>}
-  </StageFrame>;
+  </Shell>;
 }
