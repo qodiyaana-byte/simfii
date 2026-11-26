@@ -18,16 +18,33 @@ Setelah setiap evaluasi tampil kunci jawaban: jawaban siswa, jawaban yang benar,
 Nilai akhir = jawaban benar dari 30 soal dibagi 30 dikali 100. Setiap 20 poin mengisi satu bintang (5 bintang = 100).
 Teks soal dan alasan ada di `lib/questions.ts`; materi, peta konsep, dan tabel ada di `lib/content.ts`.
 
+## Dashboard
+
+- **Dashboard Murid** (di dalam aplikasi, tombol "📊 Dashboard Saya" di peta dan di layar skor): nilai terakhir dan terbaik, nilai per pos, kemampuan per materi, saran belajar, soal yang perlu diulang, perkembangan, dan riwayat percobaan.
+- **Dashboard Guru** (`/guru`, butuh token): ringkasan kelas, daftar murid dengan nilai per pos dan status tuntas/remedial (KKM bisa diubah), detail jawaban per murid, analisis soal tersulit beserta jawaban salah terbanyak, dan unduh rekap CSV. Tombol "Lihat contoh tampilan" menampilkan data contoh tanpa database.
+- Murid masuk dengan **nama panggilan + kode kelas + PIN 4 angka**. Pasangan yang sama akan membuka kembali riwayatnya. Tanpa database, aplikasi tetap berjalan dalam mode offline (nilai tidak tersimpan).
+
+## Database (Supabase)
+
+1. Buat akun di supabase.com, lalu **New project** (pilih region Singapore). Catat password database.
+2. Buka **SQL Editor > New query**, tempel seluruh isi `supabase/schema.sql`, klik **Run**. Aman dijalankan berulang kali.
+3. Buka **Project Settings > API**. Salin **Project URL**, **anon public key**, dan **service_role key**.
+4. Di Vercel: **Settings > Environment Variables**, tambahkan:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (rahasia, jangan dibagikan atau ditulis di kode)
+   - `TEACHER_DASHBOARD_TOKEN` (kata sandi dashboard guru, buat yang panjang)
+   - `SESSION_SECRET` (opsional, string acak panjang)
+5. **Redeploy** proyek di Vercel.
+6. Uji: daftar sebagai murid, selesaikan Pos 1 sampai 5, lalu cek tabel `attempts` di **Table Editor** Supabase dan buka `/guru`.
+
+Catatan: proyek Supabase gratis akan dijeda jika tidak dipakai sekitar seminggu; aktifkan kembali dari dashboard Supabase.
+
 ## Cara deploy (GitHub lalu Vercel)
 
 1. Ekstrak zip. Upload ISI folder ke GitHub lewat Add file > Upload files, sehingga `package.json`, `app`, `lib`, dan `public` berada langsung di akar repo (bukan di dalam subfolder).
 2. Di Vercel, import repo tersebut. Framework akan terdeteksi sebagai Next.js.
-3. Isi Environment Variables di Vercel (Settings > Environment Variables), lalu Redeploy:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `TEACHER_DASHBOARD_TOKEN`
-4. Jalankan `supabase/schema.sql` di Supabase SQL Editor.
+3. Isi Environment Variables dan jalankan skema database sesuai bagian "Database (Supabase)" di atas.
 
 Tanpa Supabase, permainan tetap berjalan dan nilai tampil di perangkat siswa, tetapi hasil tidak tersimpan ke Ruang Guru (`/guru`).
 

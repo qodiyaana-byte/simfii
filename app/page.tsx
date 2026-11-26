@@ -4,10 +4,12 @@ import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-
 import { questions } from "@/lib/questions";
 import { mindmapBranches, positions, slides, tableRows, tagLabels, type Seg } from "@/lib/content";
 import { Mixed } from "./mixed";
+import { StudentDashboard } from "./student-dashboard";
+import type { AnswerRow, AttemptRow } from "@/lib/analytics";
 import { type PinStatus } from "./scenery";
 import { MAP_H, MAP_W, pct, posLayout, type Box } from "@/lib/maplayout";
 
-type Screen = "home" | "identity" | "map" | "learn" | "quiz" | "review" | "result";
+type Screen = "home" | "identity" | "map" | "learn" | "quiz" | "review" | "result" | "dashboard";
 type Player = { id: string; nickname: string; classCode: string };
 
 const TOTAL_POS = positions.length;
@@ -47,6 +49,13 @@ export default function Page() {
   const [completed, setCompleted] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [history, setHistory] = useState<AttemptRow[]>([]);
+  const [online, setOnline] = useState(false);
+  const [pin, setPin] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [dashLoading, setDashLoading] = useState(false);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -71,6 +80,14 @@ export default function Page() {
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
   }, []);
+
+  const sessionAnswers: AnswerRow[] = questions
+    .filter((q) => completed.includes(q.position) && answers[q.id] !== undefined)
+    .map((q) => ({ question_id: q.id, category: q.category, answer: answers[q.id] ?? "", correct: answers[q.id] === q.answer }));
+  const sessionComplete = [1, 2, 3, 4, 5].every((id) => completed.includes(id));
+  const attemptsAll: AttemptRow[] = sessionComplete && !saved
+    ? [{ id: "sesi-ini", score: sessionAnswers.filter((a) => a.correct).length, total: questions.length, created_at: new Date().toISOString(), answers: sessionAnswers }, ...history]
+    : history;
 
   const isUnlocked = (id: number) => id === 1 || completed.includes(id - 1);
   const scoreOf = (pos: number) => {
@@ -97,27 +114,58 @@ export default function Page() {
   };
 
 
+  const goOffline = (nama: string, kelas: string) => {
+    setPlayer({ id: crypto.randomUUID(), nickname: nama, classCode: kelas });
+    setToken(null); setHistory([]); setOnline(false); setScreen("map");
+  };
+
+  // Masuk dengan nama + kelas + PIN. Jika basis data belum tersedia, permainan tetap berjalan secara offline.
   const startPlayer = async () => {
-    if (!nickname.trim()) return;
-    const p: Player = { id: crypto.randomUUID(), nickname: nickname.trim(), classCode: classCode.trim() || "UMUM" };
-    setPlayer(p);
-    setScreen("map");
+    const nama = nickname.trim();
+    const kelas = classCode.trim().toUpperCase() || "UMUM";
+    if (!nama || pin.length !== 4 || loginBusy) return;
+    setLoginBusy(true); setLoginError("");
     try {
-      await fetch("/api/players", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p) });
-    } catch { /* Permainan tetap berjalan walau penyimpanan belum tersedia. */ }
+      const res = await fetch("/api/players", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nickname: nama, classCode: kelas, pin }) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.player) {
+        setPlayer({ id: data.player.id, nickname: data.player.nickname, classCode: data.player.classCode });
+        setToken(data.token ?? null); setHistory(data.attempts ?? []); setOnline(true); setScreen("map");
+      } else if (res.status === 400 || res.status === 401) {
+        setLoginError(data.error || "Nama, kelas, atau PIN belum sesuai.");
+      } else goOffline(nama, kelas);
+    } catch { goOffline(nama, kelas); }
+    finally { setLoginBusy(false); }
+  };
+
+  const refreshHistory = async (tk: string | null = token) => {
+    if (!tk) return;
+    setDashLoading(true);
+    try {
+      const res = await fetch("/api/me", { headers: { Authorization: `Bearer ${tk}` }, cache: "no-store" });
+      if (res.ok) { const data = await res.json(); setHistory(data.attempts ?? []); }
+    } catch { /* riwayat tetap memakai data terakhir */ }
+    finally { setDashLoading(false); }
   };
 
   const saveResults = async (record: Record<string, string>) => {
-    if (!player) return;
+    if (!player || !token) { setSaved(false); return; }
     setSaving(true);
     try {
       const response = await fetch("/api/attempts", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId: player.id, answers: questions.map((item) => ({ questionId: item.id, answer: record[item.id] ?? "" })) }),
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ answers: questions.map((item) => ({ questionId: item.id, answer: record[item.id] ?? "" })) }),
       });
       setSaved(response.ok);
+      if (response.ok) await refreshHistory(token);
     } catch { setSaved(false); }
     finally { setSaving(false); }
+  };
+
+  const openDashboard = () => { setScreen("dashboard"); void refreshHistory(); };
+  const openMateri = (pos: number) => {
+    setPosition(pos); setSlideIndex(0); setQIndex(0); setSelected("");
+    setScreen(slides[pos] ? "learn" : "map");
   };
 
   const openPosition = (id: number) => {
@@ -161,7 +209,7 @@ export default function Page() {
     <div className="stage" style={{ transform: `translate(-50%, -50%) scale(${scale})`, visibility: ready ? "visible" : "hidden" }}>
     {screen !== "home" && screen !== "map" && <header className="topbar">
       <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
-      <nav><button onClick={goHome}>{player ? "Peta" : "Beranda"}</button><a href="/guru">Ruang Guru</a></nav>
+      <nav><button onClick={goHome}>{player ? "Peta" : "Beranda"}</button>{player && <button onClick={openDashboard}>📊 Dashboard</button>}<a href="/guru">Ruang Guru</a></nav>
     </header>}
 
     <div key={screen} className={`screen-enter screen-${screen}`}>
@@ -175,10 +223,13 @@ export default function Page() {
 
     {screen === "identity" && <section className="center-panel">
       <div className="panel-emoji">🕵🏻‍♀️</div><span className="eyebrow">IDENTITAS DETEKTIF</span>
-      <h2>Siapa nama detektif hari ini?</h2><p>Masukkan nama panggilan dan kode kelas untuk membuka peta desa.</p>
+      <h2>Siapa nama detektif hari ini?</h2><p>Masukkan nama, kelas, dan PIN untuk membuka peta desa.</p>
       <label>Nama panggilan</label><input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Contoh: Sami01" maxLength={30} />
       <label>Kode kelas <span className="optional">(opsional)</span></label><input value={classCode} onChange={(e) => setClassCode(e.target.value)} placeholder="Contoh: VII-A" maxLength={20} />
-      <button className="primary full" disabled={!nickname.trim()} onClick={startPlayer}>Masuk ke Desa <ArrowRight size={18} /></button>
+      <label>PIN 4 angka <span className="optional">(untuk masuk kembali)</span></label><input type="password" inputMode="numeric" pattern="[0-9]*" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="Contoh: 1234" maxLength={4} onKeyDown={(e) => { if (e.key === "Enter") void startPlayer(); }} />
+      {loginError && <span className="error">{loginError}</span>}
+      <button className="primary full" disabled={!nickname.trim() || pin.length !== 4 || loginBusy} onClick={startPlayer}>{loginBusy ? "Memeriksa..." : <>Masuk ke Desa <ArrowRight size={18} /></>}</button>
+      <small className="id-note">Nama + kelas + PIN yang sama akan membuka kembali nilai dan dashboard-mu. Ingat PIN-mu ya!</small>
       <button className="text-button" onClick={() => setScreen("home")}><ArrowLeft size={16} /> Kembali</button>
     </section>}
 
@@ -190,6 +241,7 @@ export default function Page() {
             <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
             <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
             <div className="mp mp-ui mp-progress" style={ui(1062, 36, 386, 90)}><span className="mp-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
+            <button className="mp mp-ui mp-dash" style={ui(1062, 134, 386, 56)} onClick={openDashboard}>📊 Dashboard Saya</button>
             <button className="mp mp-ui mp-gear" style={ui(1450, 44, 76, 76)} onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button>
             {positions.map((item) => {
               const L = posLayout[item.id];
@@ -262,7 +314,7 @@ export default function Page() {
         <div className="slide-nav">
           <button className="secondary" disabled={slideIndex === 0} onClick={() => setSlideIndex(slideIndex - 1)}><ArrowLeft size={16} /> Sebelumnya</button>
           <div className="word-dots">{posSlides.map((_, i) => <span key={i} className={i <= slideIndex ? "active" : ""} />)}</div>
-          <button className="primary" onClick={() => { if (slideIndex < posSlides.length - 1) setSlideIndex(slideIndex + 1); else { setQIndex(0); setSelected(""); setScreen("quiz"); } }}>{slideIndex < posSlides.length - 1 ? "Berikutnya" : "Mulai Evaluasi"} <ArrowRight size={16} /></button>
+          <button className="primary" onClick={() => { if (slideIndex < posSlides.length - 1) setSlideIndex(slideIndex + 1); else if (completed.includes(position)) setScreen("map"); else { setQIndex(0); setSelected(""); setScreen("quiz"); } }}>{slideIndex < posSlides.length - 1 ? "Berikutnya" : completed.includes(position) ? "Selesai Membaca" : "Mulai Evaluasi"} <ArrowRight size={16} /></button>
         </div>
       </div>
     </section>}
@@ -304,6 +356,8 @@ export default function Page() {
       <div className="hero-actions centered"><button className="primary" onClick={() => setScreen("map")}>{position === QUIZ_POS ? "Kembali ke Peta, Buka Aula Bintang" : "Kembali ke Peta"} <ArrowRight size={18} /></button></div>
     </section>; })()}
 
+    {screen === "dashboard" && player && <StudentDashboard player={player} attempts={attemptsAll} partial={sessionAnswers} online={online} loading={dashLoading} onBack={() => setScreen("map")} onReplay={resetAdventure} onMateri={openMateri} />}
+
     {screen === "result" && <section className="result-panel">
       {finalScore >= 60 && <div className="confetti" aria-hidden="true">{Array.from({ length: 24 }).map((_, i) => <i key={i} style={{ "--i": i } as CSSProperties} />)}</div>}
       <span className="eyebrow accent">POS 6 · AULA BINTANG</span>
@@ -315,7 +369,7 @@ export default function Page() {
       <div className="score-grid">{positions.slice(0, QUIZ_POS).map((item) => { const s = scoreOf(item.id); const done = completed.includes(item.id); return <div className="score-card" key={item.id} style={{ "--pin": item.color } as CSSProperties}><span>{item.icon}</span><small>POS {item.id}</small><b>{done ? `${s.correct}/${s.total}` : "-"}</b><em>{done ? `Nilai ${s.percent}` : "Belum dikerjakan"}</em></div>; })}</div>
       <div className="result-summary"><div><span>Jawaban benar</span><b>{totalCorrect} dari {questions.length}</b></div><div><span>Soal sudah dikerjakan</span><b>{totalAnswered} dari {questions.length}</b></div><div><span>Nilai akhir</span><b>{finalScore} / 100</b></div></div>
       <div className="save-status">{saving ? "Menyimpan hasil petualangan..." : saved ? "✓ Hasil berhasil disimpan." : "Nilai tampil di perangkat ini. Penyimpanan server belum berhasil atau belum dikonfigurasi."}</div>
-      <div className="hero-actions centered"><button className="primary" onClick={() => setScreen("map")}>Lihat Peta Desa</button><button className="secondary" onClick={resetAdventure}><RotateCcw size={16} /> Ulangi Petualangan</button></div>
+      <div className="hero-actions centered"><button className="primary" onClick={openDashboard}>📊 Dashboard Saya</button><button className="secondary" onClick={() => setScreen("map")}>Lihat Peta Desa</button><button className="secondary" onClick={resetAdventure}><RotateCcw size={16} /> Ulangi Petualangan</button></div>
     </section>}
     </div>
 
