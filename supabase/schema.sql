@@ -46,3 +46,11 @@ create index if not exists attempt_answers_attempt_idx on public.attempt_answers
 alter table public.players enable row level security;
 alter table public.attempts enable row level security;
 alter table public.attempt_answers enable row level security;
+
+-- 5) Hak akses untuk server ---------------------------------
+-- API server memakai service_role. Baris ini memastikan aplikasi tetap bisa membaca/menulis
+-- walaupun saat membuat proyek opsi "Grant API access to new tables automatically" tidak dicentang.
+-- Peran anon dan authenticated sengaja TIDAK diberi akses, sehingga data murid tidak bisa dibuka dari browser.
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
+alter default privileges in schema public grant all on tables to service_role;
