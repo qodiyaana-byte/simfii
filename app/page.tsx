@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-react";
 import { questions } from "@/lib/questions";
 import { mindmapBranches, positions, slides, tableRows, tagLabels, type Seg } from "@/lib/content";
@@ -15,10 +15,7 @@ type Player = { id: string; nickname: string; classCode: string };
 const TOTAL_POS = positions.length;
 const QUIZ_POS = 5;
 const ZOOM_MS = 950;
-const STAGE_W = 1280;
-const STAGE_H = 720;
-// gambar peta menempati bagian tengah kanvas 16:9 (sisi diperluas), sehingga titik zoom perlu dikonversi
-const mapOrigin = (x: number) => 7.8125 + x * 0.84375;
+const mapOrigin = (x: number) => x;
 const boxStyle = (b: Box): CSSProperties => ({ left: `${pct.left(b)}%`, top: `${pct.top(b)}%`, width: `${pct.width(b)}%`, height: `${pct.height(b)}%` });
 const ui = (l: number, t: number, w: number, h: number): CSSProperties => ({ left: `${(l / MAP_W) * 100}%`, top: `${(t / MAP_H) * 100}%`, width: `${(w / MAP_W) * 100}%`, height: `${(h / MAP_H) * 100}%` });
 
@@ -59,27 +56,13 @@ export default function Page() {
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  const [scale, setScale] = useState(1);
-  const [ready, setReady] = useState(false);
-  const [portrait, setPortrait] = useState(false);
+  const mapRef = useRef<HTMLDivElement | null>(null);
 
   const posQuestions = useMemo(() => questions.filter((item) => item.position === position), [position]);
   const currentQuestion = posQuestions[qIndex];
   const posSlides = slides[position] || [];
   const slide = posSlides[slideIndex];
   const accent = positions[Math.min(position, TOTAL_POS) - 1].color;
-
-  // Kanvas tetap 1280 x 720 (16:9), diperbesar atau diperkecil agar muat di layar apa pun.
-  useEffect(() => {
-    const fit = () => {
-      setScale(Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
-      setPortrait(window.innerWidth < window.innerHeight && window.innerWidth < 700);
-      setReady(true);
-    };
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
 
   const sessionAnswers: AnswerRow[] = questions
     .filter((q) => completed.includes(q.position) && answers[q.id] !== undefined)
@@ -88,6 +71,13 @@ export default function Page() {
   const attemptsAll: AttemptRow[] = sessionComplete && !saved
     ? [{ id: "sesi-ini", score: sessionAnswers.filter((a) => a.correct).length, total: questions.length, created_at: new Date().toISOString(), answers: sessionAnswers }, ...history]
     : history;
+
+  useEffect(() => {
+    if (screen !== "map") return;
+    const box = mapRef.current;
+    const pin = box?.querySelector<HTMLElement>(".hit.next, .hit.open");
+    if (box && pin) box.scrollLeft = pin.offsetLeft - box.clientWidth / 2;
+  }, [screen, completed]);
 
   const isUnlocked = (id: number) => id === 1 || completed.includes(id - 1);
   const scoreOf = (pos: number) => {
@@ -213,13 +203,13 @@ export default function Page() {
   );
   const body = (
     <div key={screen} className={`screen-enter screen-${screen}`}>
-    {screen === "home" && <section className={`home-stage ${zoom ? "zooming" : ""}`}>
+    {screen === "home" && <><section className={`home-stage ${zoom ? "zooming" : ""}`}>
       <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Simfii: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
       <button className="hs hs-start" aria-label="Mulai Petualangan" onClick={() => zoomThen(70, 72, () => setScreen("identity"))} />
       <button className="hs hs-q" aria-label="Cara Bermain" onClick={() => setShowHelp(true)}>?</button>
       <button className="hs hs-help" onClick={() => setShowHelp(true)}><span className="hh-icon">📖</span><b>Cara Bermain</b><i>→</i></button>
       <a className="hs hs-guru" href="/guru">Ruang Guru</a>
-    </section>}
+    </section><div className="home-band" aria-hidden="true" /></>}
 
     {screen === "identity" && <section className="center-panel">
       <div className="panel-emoji">🕵🏻‍♀️</div><span className="eyebrow">IDENTITAS DETEKTIF</span>
@@ -234,9 +224,9 @@ export default function Page() {
     </section>}
 
     {screen === "map" && <section className="map-screen">
-      <div className={`map-frame ${zoom ? "zooming" : ""}`}>
+      <div className={`map-frame ${zoom ? "zooming" : ""}`} ref={mapRef}>
         <div className="map-board photo" style={stageStyle}>
-          <img className="map-photo" src="/images/peta-desa-16x9.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
+          <img className="map-photo" src="/images/peta-desa.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
           <div className="map-overlay">
             <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
             <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
@@ -397,15 +387,11 @@ export default function Page() {
     </>
   );
 
-  // Halaman awal dan peta memakai gambar 16:9: dipasang utuh di tengah layar dengan latar kabur di sisi.
+  // Halaman awal dan peta memakai gambar: dibentangkan penuh selebar layar, tinggi mengikuti rasio gambar (digulir jika perlu).
   if (imageScreen) {
-    const bg = screen === "home" ? "/images/halaman-awal.jpg" : "/images/peta-desa-16x9.jpg";
-    return <main className="viewport" style={{ "--accent": accent, "--bg": `url(${bg})` } as CSSProperties}>
-      {portrait && <div className="rotate-hint">📱 Putar HP ke mode landscape agar gambar tampil lebih besar dan jelas</div>}
-      <div className="stage" style={{ transform: `translate(-50%, -50%) scale(${scale})`, visibility: ready ? "visible" : "hidden" }}>
-        {body}
-        {modals}
-      </div>
+    return <main className="fluid" style={{ "--accent": accent } as CSSProperties}>
+      {body}
+      {modals}
     </main>;
   }
 
