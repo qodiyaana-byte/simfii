@@ -72,6 +72,11 @@ export default function Page() {
     ? [{ id: "sesi-ini", score: sessionAnswers.filter((a) => a.correct).length, total: questions.length, created_at: new Date().toISOString(), answers: sessionAnswers }, ...history]
     : history;
 
+  // Setiap pindah halaman, slide materi, atau soal: langsung tampil dari bagian paling atas.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+  }, [screen, position, slideIndex, qIndex]);
+
   useEffect(() => {
     if (screen !== "map") return;
     const box = mapRef.current;
