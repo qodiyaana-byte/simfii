@@ -6,7 +6,7 @@ Media pembelajaran bahasa Arab kelas VII. Setelah masuk, murid memilih materi di
 
 Halaman ini tampil setelah murid masuk. Tampilannya memakai gambar `public/images/kumpulan-materi.jpg`; tombol, menu atas dan bawah, serta progres pos digambar di atasnya (letaknya di `HUB` pada `lib/maplayout.ts`). Baris di bawah judul kartu Mubtada' diganti dengan الْجُمْلَةُ الاِسْمِيَّةُ. Materi 01 adalah Isim dan Fi'il, Materi 02 adalah Mubtada' dan Khabar. Untuk menambah materi baru: tambahkan posisi, slide, dan soal (id soal diawali satu huruf unik), daftarkan di `materiList` (`lib/content.ts`), lalu tambahkan tata letak peta di `lib/maplayout.ts`.
 
-Peta tiap materi memakai gambar sendiri: `peta-isimfiil.jpg` (label nama digambar ulang di atas gambar) dan `peta-mubtada.jpg` (label bawaan gambar dipakai: Rumah Siswa, Warung, Pos Satpam, Pos Ronda, Jembatan, Sekolah; status kunci/selesai tampil pada bintang label).
+Peta tiap materi memakai gambar sendiri: `peta-isimfiil.jpg` (label nama digambar ulang di atas gambar) dan `peta-mubtada.jpg` (label bawaan gambar ditimpa label baru: Rumah Ismiyah, Warung Definisi, Pos Syarat, Pos Ketentuan, Jembatan Tantangan, Sekolah Bintang; status kunci/selesai tampil pada label dan bintang).
 
 ## Materi 01: Mubtada' dan Khabar
 
@@ -14,12 +14,12 @@ Susunan pos sama persis dengan materi Isim dan Fi'il (peta, tata letak, evaluasi
 
 | Pos | Isi | Soal |
 | --- | --- | --- |
-| 1. Rumah Siswa | Jumlah ismiyah = mubtada' + khabar; mubtada' sebagai subjek dan khabar sebagai predikat; contoh | 5 |
-| 2. Warung | Definisi mubtada'; definisi khabar; contoh | 5 |
-| 3. Pos Satpam | Syarat mubtada' (isim ma'rifat); syarat khabar; contoh | 7 |
-| 4. Pos Ronda | Mubtada' dan khabar marfu'; khabar sesuai jenis mubtada'; contoh | 6 |
-| 5. Jembatan | Soal akhir, satu tingkat lebih sulit | 7 |
-| 6. Sekolah | Skor tiap pos, nilai akhir /100, dan bintang | - |
+| 1. Rumah Ismiyah | Jumlah ismiyah = mubtada' + khabar; mubtada' sebagai subjek dan khabar sebagai predikat; contoh | 5 |
+| 2. Warung Definisi | Definisi mubtada'; definisi khabar; contoh | 5 |
+| 3. Pos Syarat | Syarat mubtada' (isim ma'rifat); syarat khabar; contoh | 7 |
+| 4. Pos Ketentuan | I'rab rafa'; ketika mubtada' muannats; ketika mutsanna dan jamak; rangkuman pos 4 | 6 |
+| 5. Jembatan Tantangan | Soal akhir, satu tingkat lebih sulit | 7 |
+| 6. Sekolah Bintang | Skor tiap pos, nilai akhir /100, dan bintang | - |
 
 Nilai tiap materi dihitung terpisah (30 soal per materi). Soal Mubtada' memakai id `m1-01` dst., soal Isim dan Fi'il memakai `p1-01` dst.
 

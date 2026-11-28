@@ -216,14 +216,14 @@ export default function Page() {
   const imageScreen = screen === "home" || screen === "map" || screen === "materi";
   const topbar = (
     <header className="topbar">
-      <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
+      <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Nahwu Quest</b><small>Belajar Nahwu</small></span></button>
       <nav><button className={screen === "materi" ? "on" : ""} onClick={goHome}>{player ? "📚 Kumpulan Materi" : "Beranda"}</button>{player && <button onClick={() => openDashboard("materi")}>📊 Dashboard</button>}<a href="/guru">Ruang Guru</a></nav>
     </header>
   );
   const body = (
     <div key={screen} className={`screen-enter screen-${screen}`}>
     {screen === "home" && <><section className={`home-stage ${zoom ? "zooming" : ""}`}>
-      <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Simfii: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
+      <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Nahwu Quest: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
       <button className="hs hs-start" aria-label="Mulai Petualangan" onClick={() => zoomThen(70, 72, () => setScreen(player ? "materi" : "identity"))} />
       <button className="hs hs-q" aria-label="Cara Bermain" onClick={() => setShowHelp(true)}>?</button>
       <button className="hs hs-help" onClick={() => setShowHelp(true)}><span className="hh-icon">📖</span><b>Cara Bermain</b><i>→</i></button>
@@ -265,7 +265,16 @@ export default function Page() {
                 <div className="mp hub-progress" style={ui(c.progress)} aria-label={`${done} dari ${TOTAL_POS} pos selesai`}><div className="bar"><i style={{ width: `${Math.round((done / TOTAL_POS) * 100)}%` }} /></div><small>{done}/{TOTAL_POS} pos</small></div>
               </Fragment>;
             })}
-            <div className="mp hub-line" style={ui(HUB.mubtadaLine)}><span className="ar" dir="rtl">الْجُمْلَةُ الاِسْمِيَّةُ</span></div>
+            <div className="mp hub-welcome" style={ui(HUB.welcome)}><span className="ar ar-bold">أَهْلًا وَسَهْلًا</span><i>{player?.nickname || "Detektif"}</i></div>
+            {materiList.map((m) => {
+              const art = HUB.art[m.id];
+              const words = m.arabic.split(" ");
+              return <Fragment key={`ar-${m.id}`}>
+                <div className="mp hub-title" style={ui(HUB.titles[m.id])}><span className="ar ar-bold" dir="rtl">{m.arabic}</span></div>
+                <div className="mp hub-art" style={{ ...ui(art.rect), background: art.bg, transform: `rotate(${art.rot}deg)` }}>{words.map((w) => <span key={w} className="ar ar-bold" dir="rtl">{w}</span>)}</div>
+              </Fragment>;
+            })}
+            <div className="mp hub-line" style={ui(HUB.mubtadaLine)}><span className="ar ar-bold" dir="rtl">الْجُمْلَةُ الاِسْمِيَّةُ</span></div>
           </div>
         </div>
         <a className="hub-guru" href="/guru">Ruang Guru</a>
@@ -283,7 +292,7 @@ export default function Page() {
         <div className="map-board photo portrait" style={{ ...stageStyle, aspectRatio: `${L.w} / ${L.h}`, "--k": 1536 / L.w } as CSSProperties}>
           <img className="map-photo" src={L.img} alt={L.alt} draggable={false} />
           <div className="map-overlay">
-            {L.title && <div className="mp mp-ui mp-title" style={ui(L.title)}><span className="mt-icon">🏠</span><div><b>{M.adventure}</b><small>{M.mapSub}</small></div></div>}
+            {L.title && <div className={`mp mp-ui mp-title ${L.plate ? "plate" : ""}`} style={ui(L.title)}>{!L.plate && <span className="mt-icon">🏠</span>}<div><b>{M.adventure}</b><small className="ar ar-bold" dir="rtl">{M.mapSub}</small></div></div>}
             {L.bubble && <div className="mp mp-ui mp-bubble" style={ui(L.bubble)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! {M.bubble}</p></div>}
             {L.progress && <div className="mp mp-ui mp-progress" style={ui(L.progress)}><span className="mp-star">★</span><div><b>Progres Belajar <em>{completed.length}/{TOTAL_POS}</em></b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div></div>}
             {L.chipProgress && <div className="mp mp-ui mp-progress mp-chip" style={ui(L.chipProgress)}><span className="mp-star">★</span><div><b>Progres</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em><button className="mp-q" onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button></div>}
@@ -345,6 +354,14 @@ export default function Page() {
             <div className="wg-head"><b>{g.title}</b>{g.note && <small>{g.note}</small>}</div>
             <div className="word-grid">{g.words.map((w) => <div className="word-card" key={w.arabic}><span className="ar word-ar" dir="rtl">{w.arabic}</span><span className="word-id">{w.meaning}</span></div>)}</div>
           </div>)}
+        </div>}
+        {slide.kind === "recap" && <div>
+          <p className="slide-intro">{slide.intro}</p>
+          <div className="recap-grid">{slide.points.map((pt) => <div className="recap-card" key={pt.head}>
+            <b>{pt.head}</b><p><Mixed text={pt.text} /></p>
+            <div className="recap-ex">{pt.examples.map((e) => <span className="xc" key={e.ar}><span className="ar" dir="rtl">{e.ar}</span><em>{e.id}</em></span>)}</div>
+          </div>)}</div>
+          {slide.tip && <div className="part-tip"><b>💡 Kunci mengingat:</b> {slide.tip}</div>}
         </div>}
         {slide.kind === "parts" && <div>
           <p className="slide-intro">{slide.intro}</p>

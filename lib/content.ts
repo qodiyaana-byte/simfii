@@ -8,6 +8,7 @@ export type PartWord = { ar: string; id: string };
 export type PartExample = { mubtada: PartWord; khabar: PartWord; meaning: string; note?: string };
 export type Slide =
   | { kind: "definition"; title: string; arabic: string; text: string; examples: Word[] }
+  | { kind: "recap"; title: string; intro: string; points: { head: string; text: string; examples: { ar: string; id: string }[] }[]; tip?: string }
   | { kind: "parts"; title: string; intro: string; showRoles?: boolean; items: PartExample[]; tip?: string }
   | { kind: "signs"; title: string; intro: string; items: Sign[]; tag?: FiilTag }
   | { kind: "words"; title: string; intro: string; groups: WordGroup[] }
@@ -158,12 +159,12 @@ export const tableRows = [
    Pos 1-4 = materi lalu evaluasi (5, 5, 7, 6 soal), Pos 5 = soal akhir (7 soal), Pos 6 = skor.
    ============================================================ */
 export const mubtadaPositions: MapPosition[] = [
-  { id: 1, title: "Rumah Siswa", subtitle: "Jumlah ismiyah = mubtada' + khabar", icon: "🏠", arabic: "الْجُمْلَةُ الاِسْمِيَّةُ", x: 15.6, y: 34.2, color: "#f5a623" },
-  { id: 2, title: "Warung", subtitle: "Definisi mubtada' dan khabar", icon: "🏪", arabic: "التَّعْرِيفُ", x: 46, y: 30.8, color: "#1e88e5" },
-  { id: 3, title: "Pos Satpam", subtitle: "Syarat mubtada' dan khabar", icon: "👮", arabic: "الشُّرُوطُ", x: 82, y: 38.6, color: "#8e44ad" },
-  { id: 4, title: "Pos Ronda", subtitle: "Marfu' dan kesesuaian jenis", icon: "🛖", arabic: "الْحُكْمُ", x: 40.5, y: 62.5, color: "#e03a5a" },
-  { id: 5, title: "Jembatan", subtitle: "Soal akhir yang lebih sulit", icon: "🌉", arabic: "التَّحَدِّي", x: 68, y: 70.8, color: "#00a38c" },
-  { id: 6, title: "Sekolah", subtitle: "Skor setiap pos dan nilai akhir", icon: "🏫", arabic: "النَّتِيجَةُ", x: 65.4, y: 88.4, color: "#f2b01e" },
+  { id: 1, title: "Rumah Ismiyah", subtitle: "Jumlah ismiyah = mubtada' + khabar", icon: "🏠", arabic: "الاِسْمِيَّةُ", x: 15.6, y: 34.2, color: "#f5a623" },
+  { id: 2, title: "Warung Definisi", subtitle: "Definisi mubtada' dan khabar", icon: "🏪", arabic: "التَّعْرِيفُ", x: 46, y: 30.8, color: "#1e88e5" },
+  { id: 3, title: "Pos Syarat", subtitle: "Syarat mubtada' dan khabar", icon: "👮", arabic: "الشُّرُوطُ", x: 82, y: 38.6, color: "#8e44ad" },
+  { id: 4, title: "Pos Ketentuan", subtitle: "Ketentuan mubtada' dan khabar", icon: "🛖", arabic: "الْأَحْكَامُ", x: 40.5, y: 62.5, color: "#e03a5a" },
+  { id: 5, title: "Jembatan Tantangan", subtitle: "Soal akhir yang lebih sulit", icon: "🌉", arabic: "التَّحَدِّي", x: 68, y: 70.8, color: "#00a38c" },
+  { id: 6, title: "Sekolah Bintang", subtitle: "Skor setiap pos dan nilai akhir", icon: "🏫", arabic: "النَّتِيجَةُ", x: 65.4, y: 88.4, color: "#f2b01e" },
 ];
 
 const P = (m: string, mi: string, k: string, ki: string, meaning: string, note?: string) =>
@@ -286,21 +287,21 @@ export const mubtadaSlides: Record<number, Slide[]> = {
   ],
   4: [
     {
-      kind: "signs", title: "Implikasi 1: Mubtada' dan Khabar Marfu'",
-      intro: "Karena menjadi pokok kalimat, mubtada' dan khabar sama-sama marfu'. Marfu' artinya huruf terakhirnya berharakat dhammah atau tanwin dhammah. Perhatikan bagian merah.",
+      kind: "signs", title: "Ketentuan 1: I'rab Mubtada' dan Khabar adalah Rafa'",
+      intro: "I'rab mubtada' dan khabar adalah rafa' (marfu'). Pada kata tunggal, tanda rafa' adalah huruf terakhir berharakat dhammah atau tanwin dhammah. Perhatikan bagian merah.",
       items: [
         { name: "1. Mubtada' berakhiran dhammah", rule: "Mubtada' ma'rifat dibaca dhammah (ـُ) di akhir kata.", segs: [{ t: "الْبَيْ" }, { t: "تُ", hl: true }], part: "تُ", meaning: "rumah itu",
           extra: [X("الْقَلَمُ جَدِيدٌ", "pena itu baru"), X("الْمَسْجِدُ نَظِيفٌ", "masjid itu bersih"), X("الدَّرْسُ سَهْلٌ", "pelajaran itu mudah")] },
         { name: "2. Khabar berakhiran tanwin dhammah", rule: "Khabar nakirah dibaca tanwin dhammah (ـٌ) di akhir kata.", segs: [{ t: "كَبِي" }, { t: "رٌ", hl: true }], part: "رٌ", meaning: "besar",
           extra: [X("الْبَابُ مَفْتُوحٌ", "pintu itu terbuka"), X("الْمَاءُ بَارِدٌ", "air itu dingin"), X("الطَّالِبُ مُجْتَهِدٌ", "siswa itu rajin")] },
-        { name: "3. Keduanya marfu'", rule: "Dalam satu kalimat, kedua akhir kata itu sama-sama marfu'.", segs: [{ t: "الْبَيْ" }, { t: "تُ", hl: true }, { t: " كَبِي" }, { t: "رٌ", hl: true }], part: "تُ + رٌ", meaning: "rumah itu besar",
+        { name: "3. Keduanya rafa'", rule: "Dalam satu kalimat, kedua akhir kata itu sama-sama rafa'.", segs: [{ t: "الْبَيْ" }, { t: "تُ", hl: true }, { t: " كَبِي" }, { t: "رٌ", hl: true }], part: "تُ + رٌ", meaning: "rumah itu besar",
           extra: [X("الْمَدْرَسَةُ وَاسِعَةٌ", "sekolah itu luas"), X("الْوَلَدُ ذَكِيٌّ", "anak laki-laki itu pandai"), X("الْحَدِيقَةُ جَمِيلَةٌ", "taman itu indah")] },
-        { name: "4. Nama orang juga marfu'", rule: "Mubtada' berupa nama orang tetap berakhiran dhammah.", segs: [{ t: "أَحْمَ" }, { t: "دُ", hl: true }, { t: " مُجْتَهِ" }, { t: "دٌ", hl: true }], part: "دُ + دٌ", meaning: "Ahmad rajin",
+        { name: "4. Nama orang juga rafa'", rule: "Mubtada' berupa nama orang tetap berakhiran dhammah.", segs: [{ t: "أَحْمَ" }, { t: "دُ", hl: true }, { t: " مُجْتَهِ" }, { t: "دٌ", hl: true }], part: "دُ + دٌ", meaning: "Ahmad rajin",
           extra: [X("فَاطِمَةُ نَشِيطَةٌ", "Fatimah giat"), X("يُوسُفُ ذَكِيٌّ", "Yusuf pandai"), X("زَيْنَبُ مُجْتَهِدَةٌ", "Zainab rajin")] },
       ],
     },
     {
-      kind: "signs", title: "Implikasi 2: Khabar Sesuai Jenis Mubtada'",
+      kind: "signs", title: "Ketentuan 2: Ketika Mubtada' Muannats",
       intro: "Khabar mengikuti jenis mubtada'. Mubtada' mudzakkar (maskulin) memakai khabar mudzakkar. Mubtada' muannats (feminin) memakai khabar muannats yang berakhiran ة.",
       items: [
         { name: "1. Mubtada' mudzakkar", rule: "Khabar juga mudzakkar, tanpa ة di akhirnya.", segs: [{ t: "الْقَلَمُ " }, { t: "جَدِيدٌ", hl: true }], part: "جَدِيدٌ", meaning: "pena itu baru",
@@ -312,16 +313,29 @@ export const mubtadaSlides: Record<number, Slide[]> = {
       ],
     },
     {
-      kind: "parts", title: "Contoh Lengkap: Marfu' dan Sesuai Jenis", showRoles: false,
-      intro: "Setiap kalimat berikut memiliki mubtada' dan khabar yang marfu' serta sama jenisnya.",
+      kind: "signs", title: "Ketentuan 3: Ketika Mubtada' Mutsanna dan Jamak",
+      intro: "Khabar juga mengikuti jumlah mubtada'. Jika mubtada' mutsanna (bermakna dua), khabar mutsanna. Jika mubtada' jamak (lebih dari dua), khabar jamak. Tanda rafa'-nya berubah: alif pada mutsanna, waw pada jamak mudzakkar salim, dhammah pada jamak muannats salim.",
       items: [
-        P("الْوَلَدُ", "anak laki-laki itu", "نَشِيطٌ", "giat", "Anak laki-laki itu giat", "Keduanya marfu'. Mudzakkar dengan mudzakkar."),
-        P("الْبِنْتُ", "anak perempuan itu", "نَشِيطَةٌ", "giat", "Anak perempuan itu giat", "Keduanya marfu'. Muannats dengan muannats (ة)."),
-        P("الْمَسْجِدُ", "masjid itu", "نَظِيفٌ", "bersih", "Masjid itu bersih", "Keduanya marfu'. Mudzakkar dengan mudzakkar."),
-        P("الْحَدِيقَةُ", "taman itu", "جَمِيلَةٌ", "indah", "Taman itu indah", "Keduanya marfu'. Muannats dengan muannats (ة)."),
-        P("الدَّرْسُ", "pelajaran itu", "سَهْلٌ", "mudah", "Pelajaran itu mudah", "Keduanya marfu'. Mudzakkar dengan mudzakkar."),
-        P("فَاطِمَةُ", "Fatimah", "مُجْتَهِدَةٌ", "rajin", "Fatimah rajin", "Keduanya marfu'. Muannats dengan muannats (ة)."),
+        { name: "1. Mutsanna mudzakkar (dua)", rule: "Mubtada' dan khabar sama-sama berakhiran ـَانِ. Tanda rafa'-nya alif.", segs: [{ t: "الْوَلَدَ" }, { t: "انِ", hl: true }, { t: " نَشِيطَ" }, { t: "انِ", hl: true }], part: "ـَانِ", meaning: "dua anak laki-laki itu giat",
+          extra: [X("الْكِتَابَانِ جَدِيدَانِ", "dua buku itu baru"), X("الطَّالِبَانِ مُجْتَهِدَانِ", "dua siswa itu rajin"), X("الْمَسْجِدَانِ نَظِيفَانِ", "dua masjid itu bersih")] },
+        { name: "2. Mutsanna muannats (dua)", rule: "Khabar mutsanna muannats memakai ـَتَانِ.", segs: [{ t: "الْبِنْتَ" }, { t: "انِ", hl: true }, { t: " نَشِيطَتَ" }, { t: "انِ", hl: true }], part: "ـَانِ", meaning: "dua anak perempuan itu giat",
+          extra: [X("الْمَدْرَسَتَانِ وَاسِعَتَانِ", "dua sekolah itu luas"), X("الْغُرْفَتَانِ نَظِيفَتَانِ", "dua kamar itu bersih"), X("الطَّالِبَتَانِ مُجْتَهِدَتَانِ", "dua siswi itu rajin")] },
+        { name: "3. Jamak mudzakkar salim", rule: "Mubtada' dan khabar sama-sama berakhiran ـُونَ. Tanda rafa'-nya waw.", segs: [{ t: "الْمُسْلِمُ" }, { t: "ونَ", hl: true }, { t: " مُجْتَهِدُ" }, { t: "ونَ", hl: true }], part: "ـُونَ", meaning: "kaum muslimin itu rajin",
+          extra: [X("الْمُعَلِّمُونَ نَشِيطُونَ", "para guru itu giat"), X("الطَّالِبُونَ مُجْتَهِدُونَ", "para siswa itu rajin"), X("الْمُدَرِّسُونَ مَاهِرُونَ", "para pengajar itu terampil")] },
+        { name: "4. Jamak muannats salim", rule: "Mubtada' dan khabar sama-sama berakhiran ـَاتُ / ـَاتٌ. Tanda rafa'-nya dhammah.", segs: [{ t: "الْمُسْلِمَ" }, { t: "اتُ", hl: true }, { t: " مُجْتَهِدَ" }, { t: "اتٌ", hl: true }], part: "ـَاتُ + ـَاتٌ", meaning: "para muslimah itu rajin",
+          extra: [X("الْمُعَلِّمَاتُ نَشِيطَاتٌ", "para guru perempuan itu giat"), X("الطَّالِبَاتُ مُجْتَهِدَاتٌ", "para siswi itu rajin"), X("الْمُمَرِّضَاتُ مَاهِرَاتٌ", "para perawat perempuan itu terampil")] },
       ],
+    },
+    {
+      kind: "recap", title: "Rangkuman Pos 4: Ketentuan Mubtada' dan Khabar",
+      intro: "Ingat empat ketentuan berikut setiap kali menyusun jumlah ismiyah.",
+      points: [
+        { head: "1. I'rab: rafa'", text: "Mubtada' dan khabar sama-sama rafa' (marfu'). Pada kata tunggal, tandanya dhammah atau tanwin dhammah.", examples: [X("الْبَيْتُ كَبِيرٌ", "rumah itu besar")] },
+        { head: "2. Jenis: khabar mengikuti mubtada'", text: "Mubtada' mudzakkar memakai khabar mudzakkar. Mubtada' muannats memakai khabar muannats berakhiran ة.", examples: [X("الْقَلَمُ جَدِيدٌ", "pena itu baru"), X("الْمَدْرَسَةُ وَاسِعَةٌ", "sekolah itu luas")] },
+        { head: "3. Mutsanna (dua)", text: "Mubtada' mutsanna memakai khabar mutsanna. Akhirannya ـَانِ (muannats: ـَتَانِ).", examples: [X("الْوَلَدَانِ نَشِيطَانِ", "dua anak laki-laki itu giat"), X("الْبِنْتَانِ نَشِيطَتَانِ", "dua anak perempuan itu giat")] },
+        { head: "4. Jamak (lebih dari dua)", text: "Mubtada' jamak memakai khabar jamak. Jamak mudzakkar salim berakhiran ـُونَ, jamak muannats salim berakhiran ـَاتٌ.", examples: [X("الْمُسْلِمُونَ مُجْتَهِدُونَ", "kaum muslimin itu rajin"), X("الْمُسْلِمَاتُ مُجْتَهِدَاتٌ", "para muslimah itu rajin")] },
+      ],
+      tip: "Rumusnya: mubtada' dan khabar harus sama jenis, sama jumlah, dan sama-sama rafa'.",
     },
   ],
 };
@@ -330,8 +344,8 @@ export const mubtadaSummaryRows = [
   { aspect: "Arti", a: "Subjek, yang sedang dibicarakan", b: "Predikat, keterangan tentang mubtada'" },
   { aspect: "Letak", a: "Di awal kalimat", b: "Setelah mubtada'" },
   { aspect: "Syarat", a: "Isim ma'rifat (diawali ال atau nama orang)", b: "Isim nakirah (bertanwin), tanpa ال" },
-  { aspect: "Harakat akhir", a: "Marfu': dhammah (ـُ)", b: "Marfu': tanwin dhammah (ـٌ)" },
-  { aspect: "Kesesuaian jenis", a: "Mudzakkar atau muannats", b: "Mengikuti mubtada' (muannats berakhiran ة)" },
+  { aspect: "I'rab", a: "Rafa': dhammah (ـُ)", b: "Rafa': tanwin dhammah (ـٌ)" },
+  { aspect: "Ketentuan jenis dan jumlah", a: "Mudzakkar/muannats; mufrad, mutsanna, jamak", b: "Mengikuti mubtada' (muannats ة, mutsanna ـَانِ, jamak ـُونَ / ـَاتٌ)" },
   { aspect: "Contoh", a: "الْبَيْتُ (rumah itu)", b: "كَبِيرٌ (besar)" },
 ];
 
@@ -350,8 +364,8 @@ export type Materi = {
 
 export const materiList: Materi[] = [
   {
-    id: "isimfiil", no: "01", arabic: "إِسْمٌ وَفِعْلٌ", title: "Isim dan Fi'il",
-    adventure: "Petualangan Isim dan Fi'il", mapSub: "Mengenal Isim dan Fi'il",
+    id: "isimfiil", no: "01", arabic: "الاِسْمُ وَالْفِعْلُ", title: "Isim dan Fi'il",
+    adventure: "Isim dan Fi'il", mapSub: "الاِسْمُ وَالْفِعْلُ",
     bubble: "Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi'il!",
     positions: isimfiilPositions, slides: isimfiilSlides,
     summary: { title: "Ringkasan Isim dan Fi'il", head: ["Isim", "Fi'il"], rows: tableRows.map((r) => ({ aspect: r.aspect, a: r.isim, b: r.fiil })) },
@@ -363,13 +377,13 @@ export const materiList: Materi[] = [
     sidekick: "Ciri isim dan fi'il yang sudah kamu pelajari",
   },
   {
-    id: "mubtada", no: "02", arabic: "مُبْتَدَأٌ وَخَبَرٌ", title: "Mubtada' dan Khabar",
-    adventure: "Mubtada' dan Khabar", mapSub: "Mengenal jumlah ismiyah",
+    id: "mubtada", no: "02", arabic: "الْمُبْتَدَأُ وَالْخَبَرُ", title: "Mubtada' dan Khabar",
+    adventure: "Mubtada' dan Khabar", mapSub: "الْمُبْتَدَأُ وَالْخَبَرُ",
     bubble: "Ayo selesaikan misi dan pahami susunan kalimatnya!",
     positions: mubtadaPositions, slides: mubtadaSlides,
     summary: { title: "Ringkasan Mubtada' dan Khabar", head: ["Mubtada'", "Khabar"], rows: mubtadaSummaryRows },
     help: [
-      { b: "Pos 1 sampai 4: baca materi.", t: "Pelajari jumlah ismiyah, definisi, syarat, dan implikasi mubtada' dan khabar, lalu kerjakan soal evaluasi." },
+      { b: "Pos 1 sampai 4: baca materi.", t: "Pelajari jumlah ismiyah, definisi, syarat, dan ketentuan mubtada' dan khabar, lalu kerjakan soal evaluasi." },
       { b: "Lihat kunci jawaban.", t: "Setiap pos menampilkan jawabanmu, jawaban yang benar, dan alasannya." },
       { b: "Pos 5: tantang dirimu.", t: "Soal akhir yang lebih sulit dari pos-pos sebelumnya." },
     ],

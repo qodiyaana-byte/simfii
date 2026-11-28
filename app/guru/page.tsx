@@ -148,7 +148,7 @@ export default function TeacherDashboard() {
   /* ===== MASUK ===== */
   if (!rows) {
     return <Shell>
-      <header className="topbar"><a className="brand" href="/"><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>Dashboard Guru</small></span></a><nav><a href="/">Ke Aplikasi</a></nav></header>
+      <header className="topbar"><a className="brand" href="/"><span className="brand-mark">🕵️</span><span><b>Nahwu Quest</b><small>Dashboard Guru</small></span></a><nav><a href="/">Ke Aplikasi</a></nav></header>
       <div className="screen-enter"><div className="td-login">
         <div className="td-login-icon">📊</div><h1>Dashboard Guru</h1>
         <p>Masukkan token guru untuk melihat nilai, perkembangan, dan analisis soal seluruh murid.</p>
@@ -166,7 +166,7 @@ export default function TeacherDashboard() {
   const attemptData = detail ? detail.attempts[Math.min(detailAttempt, detail.attempts.length - 1)] : null;
   return <Shell>
     <header className="topbar td-top">
-      <a className="brand" href="/"><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>Dashboard Guru</small></span></a>
+      <a className="brand" href="/"><span className="brand-mark">🕵️</span><span><b>Nahwu Quest</b><small>Dashboard Guru</small></span></a>
       <div className="td-actions">
         <label>KKM <input type="number" min={1} max={100} value={kkm} onChange={(e) => changeKkm(Number(e.target.value))} /></label>
         <button onClick={refresh} disabled={loading}>↻ Muat ulang</button>

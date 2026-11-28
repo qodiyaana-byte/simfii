@@ -10,7 +10,7 @@ export const MATERI_KEYS: MateriKey[] = ["mubtada", "isimfiil"];
 export const MATERI_LABEL: Record<MateriKey, string> = { mubtada: "Mubtada' dan Khabar", isimfiil: "Isim dan Fi'il" };
 
 const NAMES_ISIMFIIL: Record<number, string> = { 1: "Rumah Isim", 2: "Rumah Fi'il", 3: "Balai Peta Konsep", 4: "Kantor Detektif", 5: "Taman Tantangan" };
-const NAMES_MUBTADA: Record<number, string> = { 1: "Rumah Siswa", 2: "Warung", 3: "Pos Satpam", 4: "Pos Ronda", 5: "Jembatan" };
+const NAMES_MUBTADA: Record<number, string> = { 1: "Rumah Ismiyah", 2: "Warung Definisi", 3: "Pos Syarat", 4: "Pos Ketentuan", 5: "Jembatan Tantangan" };
 export const POS_NAMES_OF: Record<MateriKey, Record<number, string>> = { isimfiil: NAMES_ISIMFIIL, mubtada: NAMES_MUBTADA };
 // Dipertahankan agar kode lama tetap bekerja (materi Isim dan Fi'il).
 export const POS_NAMES = NAMES_ISIMFIIL;
@@ -18,7 +18,7 @@ export const POS_COLORS: Record<number, string> = { 1: "#f5a623", 2: "#1e88e5", 
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   isim: "Mengenali isim", fiil: "Mengenali fi'il", beda: "Membedakan isim dan fi'il", campuran: "Analisis kalimat",
-  ismiyah: "Memahami jumlah ismiyah", definisi: "Mengenali mubtada' dan khabar", syarat: "Memahami syarat", implikasi: "Memahami marfu' dan kesesuaian",
+  ismiyah: "Memahami jumlah ismiyah", definisi: "Mengenali mubtada' dan khabar", syarat: "Memahami syarat", implikasi: "Memahami ketentuan mubtada' dan khabar",
 };
 // Kategori tiap materi, berurutan sesuai pos.
 export const CATEGORIES_OF: Record<MateriKey, Category[]> = {

@@ -18,6 +18,7 @@ export type MapLayout = {
   mode: "pills" | "badges";
   pos: Record<number, PosLayout>;
   // elemen yang digambar ulang di atas tulisan bawaan gambar
+  plate?: boolean; // judul materi memakai papan kayu terang (menimpa papan bawaan gambar)
   title?: Rect; bubble?: Rect; progress?: Rect; summary?: Rect;
   // area klik transparan di atas tombol bawaan gambar
   help?: Rect; next?: Rect; back?: Rect; nav: NavRects;
@@ -49,13 +50,14 @@ const isimfiil: MapLayout = {
 const mubtada: MapLayout = {
   w: 1154, h: 1363, img: "/images/peta-mubtada.jpg", alt: "Peta misi Mubtada' dan Khabar", mode: "badges",
   pos: {
-    1: { hit: box(10, 232, 262, 178), badge: { x: 138, y: 224 } },
-    2: { hit: box(155, 462, 240, 212), badge: { x: 272, y: 456 } },
-    3: { hit: box(590, 468, 215, 226), badge: { x: 711, y: 462 } },
-    4: { hit: box(392, 718, 280, 218), badge: { x: 524, y: 712 } },
-    5: { hit: box(678, 952, 238, 205), badge: { x: 803, y: 948 } },
-    6: { hit: box(845, 175, 309, 255), badge: { x: 1023, y: 346 } },
+    1: { hit: box(10, 232, 262, 178), badge: { x: 138, y: 224 }, pill: box(30, 238, 216, 70) },
+    2: { hit: box(155, 462, 240, 212), badge: { x: 272, y: 456 }, pill: box(154, 470, 240, 70) },
+    3: { hit: box(590, 468, 215, 226), badge: { x: 711, y: 462 }, pill: box(603, 474, 216, 70) },
+    4: { hit: box(392, 718, 280, 218), badge: { x: 524, y: 712 }, pill: box(410, 722, 230, 70) },
+    5: { hit: box(678, 952, 238, 205), badge: { x: 803, y: 948 }, pill: box(668, 958, 270, 70) },
+    6: { hit: box(845, 175, 309, 255), badge: { x: 1023, y: 346 }, pill: box(903, 352, 240, 70) },
   },
+  plate: true, title: [226, 8, 214, 138],
   back: [1052, 18, 82, 82],
   nav: { home: [452, 24, 138, 62], materi: [594, 24, 138, 62], peta: [736, 24, 146, 62], profil: [894, 24, 142, 62] },
   chipProgress: [884, 104, 258, 52], chipSummary: [30, 1172, 400, 62],
@@ -70,6 +72,15 @@ export const HUB = {
   } as Record<MateriId, { card: Rect; button: Rect; progress: Rect }>,
   // menutup baris keterangan bawaan kartu Mubtada' agar diganti الْجُمْلَةُ الاِسْمِيَّةُ
   mubtadaLine: [366, 986, 340, 64] as Rect,
+  // papan sapaan di kiri atas (menimpa tulisan bawaan gambar)
+  welcome: [172, 22, 218, 94] as Rect,
+  // judul Arab pada kartu (menimpa tulisan bawaan gambar)
+  titles: { isimfiil: [366, 543, 300, 90] as Rect, mubtada: [366, 840, 300, 90] as Rect } as Record<MateriId, Rect>,
+  // tulisan Arab pada ilustrasi buku dan papan tulis (menimpa tulisan bawaan gambar)
+  art: {
+    isimfiil: { rect: [158, 596, 118, 122] as Rect, rot: -9, bg: "linear-gradient(135deg,#2c84de,#1f7ad6)" },
+    mubtada: { rect: [128, 900, 120, 128] as Rect, rot: -3, bg: "linear-gradient(135deg,#2b3a4d,#2a3f52)" },
+  } as Record<MateriId, { rect: Rect; rot: number; bg: string }>,
   nav: {
     top: { home: [440, 24, 112, 76] as Rect, materi: [565, 24, 120, 76] as Rect, peta: [700, 24, 125, 76] as Rect, profil: [855, 24, 115, 76] as Rect },
     bottom: { home: [60, 1452, 175, 72] as Rect, materi: [310, 1452, 160, 72] as Rect, peta: [570, 1452, 165, 72] as Rect, profil: [815, 1452, 150, 72] as Rect },
