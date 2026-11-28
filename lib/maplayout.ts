@@ -8,7 +8,8 @@ export type Rect = [number, number, number, number]; // [kiri, atas, lebar, ting
 export type PosLayout = {
   hit: Box;          // area klik pada bangunan
   pill?: Box;        // label nama yang menutupi tulisan bawaan gambar (hanya peta Isim dan Fi'il)
-  badge?: { x: number; y: number }; // titik bintang pada label bawaan gambar (hanya peta Mubtada')
+  badge?: { x: number; y: number }; // titik ikon pada label bawaan gambar (peta Mubtada')
+  label?: Box;       // label bawaan gambar yang diredupkan saat pos terkunci (peta Mubtada')
 };
 
 export type NavRects = { home: Rect; materi: Rect; peta: Rect; profil: Rect };
@@ -29,38 +30,37 @@ export type MapLayout = {
 
 const box = (x: number, y: number, w: number, h: number): Box => ({ cx: x + w / 2, cy: y + h / 2, w, h });
 
-/* Peta Isim dan Fi'il: /images/peta-isimfiil.jpg (1024 x 1536) */
+/* Peta Isim dan Fi'il: /images/peta-isimfiil.jpg (1042 x 1536; tepi gambar asli dipangkas 50 px kiri dan 54 px kanan) */
 const isimfiil: MapLayout = {
-  w: 1024, h: 1536, img: "/images/peta-isimfiil.jpg", alt: "Peta desa petualangan Isim dan Fi'il", mode: "pills",
+  w: 1042, h: 1536, img: "/images/peta-isimfiil.jpg", alt: "Peta desa petualangan Isim dan Fi'il", mode: "pills",
   pos: {
-    1: { hit: box(15, 245, 250, 165), pill: box(55, 403, 215, 78) },
-    2: { hit: box(365, 270, 240, 155), pill: box(395, 428, 225, 74) },
-    3: { hit: box(700, 380, 300, 170), pill: box(728, 550, 262, 76) },
-    4: { hit: box(195, 585, 385, 140), pill: box(250, 724, 250, 76) },
-    5: { hit: box(385, 820, 265, 195), pill: box(395, 1016, 240, 76) },
-    6: { hit: box(570, 1085, 435, 130), pill: box(688, 1214, 268, 82) },
+    1: { hit: box(25, 245, 260, 165), pill: box(65, 402, 215, 78) },
+    2: { hit: box(360, 265, 255, 165), pill: box(405, 427, 225, 76) },
+    3: { hit: box(720, 380, 300, 170), pill: box(742, 548, 248, 78) },
+    4: { hit: box(205, 585, 330, 145), pill: box(260, 723, 250, 78) },
+    5: { hit: box(395, 830, 275, 190), pill: box(402, 1014, 240, 78) },
+    6: { hit: box(590, 1090, 425, 135), pill: box(698, 1212, 268, 82) },
   },
-  title: [12, 14, 402, 156], bubble: [424, 16, 338, 140], progress: [774, 22, 176, 108],
-  summary: [8, 1266, 330, 130],
-  help: [954, 26, 66, 70], backChip: [776, 140, 240, 50], next: [828, 1298, 194, 124],
-  nav: { home: [70, 1440, 215, 80], materi: [315, 1440, 200, 80], peta: [535, 1440, 195, 80], profil: [750, 1440, 195, 80] },
+  title: [20, 16, 408, 158], bubble: [430, 14, 346, 130], progress: [784, 22, 176, 108],
+  summary: [18, 1266, 330, 130],
+  help: [962, 26, 66, 68], backChip: [772, 136, 250, 48], next: [838, 1296, 196, 124],
+  nav: { home: [90, 1436, 215, 82], materi: [322, 1436, 205, 82], peta: [540, 1436, 205, 82], profil: [765, 1436, 200, 82] },
 };
 
-/* Peta Mubtada' dan Khabar: /images/peta-mubtada.jpg (1154 x 1363) */
+/* Peta Mubtada' dan Khabar: /images/peta-mubtada.jpg (1305 x 1206). Judul, label pos, dan tombol Kumpulan Materi memakai tulisan bawaan gambar. */
 const mubtada: MapLayout = {
-  w: 1154, h: 1363, img: "/images/peta-mubtada.jpg", alt: "Peta misi Mubtada' dan Khabar", mode: "badges",
+  w: 1305, h: 1206, img: "/images/peta-mubtada.jpg", alt: "Peta petualangan Mubtada' dan Khabar", mode: "badges",
   pos: {
-    1: { hit: box(10, 232, 262, 178), badge: { x: 138, y: 224 }, pill: box(30, 238, 216, 70) },
-    2: { hit: box(155, 462, 240, 212), badge: { x: 272, y: 456 }, pill: box(154, 470, 240, 70) },
-    3: { hit: box(590, 468, 215, 226), badge: { x: 711, y: 462 }, pill: box(603, 474, 216, 70) },
-    4: { hit: box(392, 718, 280, 218), badge: { x: 524, y: 712 }, pill: box(410, 722, 230, 70) },
-    5: { hit: box(678, 952, 238, 205), badge: { x: 803, y: 948 }, pill: box(668, 958, 270, 70) },
-    6: { hit: box(845, 175, 309, 255), badge: { x: 1023, y: 346 }, pill: box(903, 352, 240, 70) },
+    1: { hit: box(50, 215, 265, 255), badge: { x: 127, y: 431 }, label: box(88, 398, 217, 68) },
+    2: { hit: box(335, 360, 225, 215), badge: { x: 390, y: 543 }, label: box(348, 515, 197, 57) },
+    3: { hit: box(305, 590, 325, 215), badge: { x: 405, y: 770 }, label: box(364, 742, 188, 58) },
+    4: { hit: box(595, 730, 295, 200), badge: { x: 695, y: 862 }, label: box(655, 833, 193, 55) },
+    5: { hit: box(800, 440, 240, 245), badge: { x: 850, y: 653 }, label: box(812, 625, 228, 58) },
+    6: { hit: box(1000, 225, 290, 280), badge: { x: 1088, y: 466 }, label: box(1050, 433, 198, 67) },
   },
-  plate: true, title: [226, 8, 214, 138],
-  back: [1052, 18, 82, 82],
-  nav: { home: [452, 24, 138, 62], materi: [594, 24, 138, 62], peta: [736, 24, 146, 62], profil: [894, 24, 142, 62] },
-  chipProgress: [884, 104, 258, 52], chipSummary: [30, 1172, 400, 62],
+  bubble: [504, 12, 462, 132], progress: [981, 20, 226, 114], summary: [18, 934, 388, 124],
+  help: [1220, 24, 72, 72], back: [992, 142, 296, 64], next: [1026, 920, 268, 134],
+  nav: { home: [90, 1098, 285, 84], materi: [398, 1098, 250, 84], peta: [665, 1098, 275, 84], profil: [968, 1098, 265, 84] },
 };
 
 /* Halaman Kumpulan Materi: /images/kumpulan-materi.jpg (1024 x 1536) */

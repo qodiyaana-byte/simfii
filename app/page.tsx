@@ -223,7 +223,8 @@ export default function Page() {
   const body = (
     <div key={screen} className={`screen-enter screen-${screen}`}>
     {screen === "home" && <><section className={`home-stage ${zoom ? "zooming" : ""}`}>
-      <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Nahwu Quest: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
+      <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Nahwu Quest: ayo jelajahi dunia Bahasa Arab dan pahami susunan kalimatnya" draggable={false} />
+        <div className="home-title"><span className="ht-main">NAHWU<br />QUEST</span><span className="ar ar-bold ht-ar" dir="rtl">النَّحْوُ</span></div></div>
       <button className="hs hs-start" aria-label="Mulai Petualangan" onClick={() => zoomThen(70, 72, () => setScreen(player ? "materi" : "identity"))} />
       <button className="hs hs-q" aria-label="Cara Bermain" onClick={() => setShowHelp(true)}>?</button>
       <button className="hs hs-help" onClick={() => setShowHelp(true)}><span className="hh-icon">📖</span><b>Cara Bermain</b><i>→</i></button>
@@ -313,6 +314,7 @@ export default function Page() {
                   <span className={`pl-icon ${st}`}>{st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={18} /> : "★"}</span>
                   <span className="pl-text"><b>{item.title}</b><span className="ar" dir="rtl">{item.arabic}</span></span>
                 </button>}
+                {PL.label && st === "locked" && <span className="mp mp-dim" style={pctBox(PL.label, L.w, L.h)} aria-hidden="true" />}
                 {PL.badge && <span className={`mp mp-badge ${st}`} style={{ left: `${(PL.badge.x / L.w) * 100}%`, top: `${(PL.badge.y / L.h) * 100}%` }} aria-hidden="true">
                   {st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={18} /> : "★"}
                 </span>}

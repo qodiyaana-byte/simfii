@@ -159,11 +159,11 @@ export const tableRows = [
    Pos 1-4 = materi lalu evaluasi (5, 5, 7, 6 soal), Pos 5 = soal akhir (7 soal), Pos 6 = skor.
    ============================================================ */
 export const mubtadaPositions: MapPosition[] = [
-  { id: 1, title: "Rumah Ismiyah", subtitle: "Jumlah ismiyah = mubtada' + khabar", icon: "🏠", arabic: "الاِسْمِيَّةُ", x: 15.6, y: 34.2, color: "#f5a623" },
-  { id: 2, title: "Warung Definisi", subtitle: "Definisi mubtada' dan khabar", icon: "🏪", arabic: "التَّعْرِيفُ", x: 46, y: 30.8, color: "#1e88e5" },
-  { id: 3, title: "Pos Syarat", subtitle: "Syarat mubtada' dan khabar", icon: "👮", arabic: "الشُّرُوطُ", x: 82, y: 38.6, color: "#8e44ad" },
-  { id: 4, title: "Pos Ketentuan", subtitle: "Ketentuan mubtada' dan khabar", icon: "🛖", arabic: "الْأَحْكَامُ", x: 40.5, y: 62.5, color: "#e03a5a" },
-  { id: 5, title: "Jembatan Tantangan", subtitle: "Soal akhir yang lebih sulit", icon: "🌉", arabic: "التَّحَدِّي", x: 68, y: 70.8, color: "#00a38c" },
+  { id: 1, title: "Jumlah Ismiyah", subtitle: "Jumlah ismiyah = mubtada' + khabar", icon: "🏠", arabic: "الْجُمْلَةُ الاِسْمِيَّةُ", x: 15.6, y: 34.2, color: "#f5a623" },
+  { id: 2, title: "Definisi", subtitle: "Definisi mubtada' dan khabar", icon: "🏪", arabic: "التَّعْرِيفُ", x: 46, y: 30.8, color: "#1e88e5" },
+  { id: 3, title: "Syarat", subtitle: "Syarat mubtada' dan khabar", icon: "🛖", arabic: "الشُّرُوطُ", x: 82, y: 38.6, color: "#8e44ad" },
+  { id: 4, title: "Ketentuan", subtitle: "Ketentuan mubtada' dan khabar", icon: "🌉", arabic: "الْأَحْكَامُ", x: 40.5, y: 62.5, color: "#e03a5a" },
+  { id: 5, title: "Pos Tantangan", subtitle: "Soal akhir yang lebih sulit", icon: "👮", arabic: "التَّحَدِّي", x: 68, y: 70.8, color: "#00a38c" },
   { id: 6, title: "Sekolah Bintang", subtitle: "Skor setiap pos dan nilai akhir", icon: "🏫", arabic: "النَّتِيجَةُ", x: 65.4, y: 88.4, color: "#f2b01e" },
 ];
 
