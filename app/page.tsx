@@ -288,7 +288,8 @@ export default function Page() {
             {L.progress && <div className="mp mp-ui mp-progress" style={ui(L.progress)}><span className="mp-star">★</span><div><b>Progres Belajar <em>{completed.length}/{TOTAL_POS}</em></b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div></div>}
             {L.chipProgress && <div className="mp mp-ui mp-progress mp-chip" style={ui(L.chipProgress)}><span className="mp-star">★</span><div><b>Progres</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em><button className="mp-q" onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button></div>}
             {L.help && <button className="mp nav-hit" style={ui(L.help)} aria-label="Cara Bermain" onClick={() => setShowHelp(true)} />}
-            {L.back && <button className="mp nav-hit" style={ui(L.back)} aria-label="Kembali ke Kumpulan Materi" onClick={() => setScreen("materi")} />}
+            {L.backChip && <button className="mp mp-ui mp-backchip" style={ui(L.backChip)} onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button>}
+            {L.back && <button className="mp nav-hit" style={ui(L.back)} aria-label="Kembali ke Kumpulan Materi" title="Kembali ke Kumpulan Materi" onClick={() => setScreen("materi")} />}
             {(["home", "materi", "peta", "profil"] as const).map((k) => <button key={k} className="mp nav-hit" style={ui(L.nav[k])} aria-label={labels[k]} onClick={navTo[k]} />)}
             {positions.map((item) => {
               const PL = L.pos[item.id];
@@ -317,7 +318,7 @@ export default function Page() {
     </section>; })()}
 
     {screen === "learn" && slide && <section className="content-section">
-      <button className="back-link" onClick={() => setScreen("map")}><ArrowLeft size={16} /> Kembali ke peta</button>
+      <div className="back-row"><button className="back-link" onClick={() => setScreen("map")}><ArrowLeft size={16} /> Kembali ke peta</button><button className="back-link" onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button></div>
       <div className="learning-heading"><div className="lh-icon">{positions[position - 1].icon}</div><div><span className="eyebrow accent">POS {position} · {positions[position - 1].title.toUpperCase()}</span><h2>{slide.title}</h2></div><span className="progress-label">Materi {slideIndex + 1}/{posSlides.length}</span></div>
       <div className={`slide-card ${slide.kind === "signs" && slide.tag ? slide.tag : ""}`}>
         {slide.kind === "definition" && <div className="definition">
@@ -384,7 +385,7 @@ export default function Page() {
     </section>}
 
     {screen === "quiz" && currentQuestion && <section className="quiz-wrap">
-      <div className="quiz-top"><button className="back-link" onClick={() => setScreen("map")}><ArrowLeft size={16} /> Kembali ke peta</button><span className="quiz-count">POS {position} · SOAL {qIndex + 1}/{posQuestions.length}</span></div>
+      <div className="quiz-top"><div className="back-row"><button className="back-link" onClick={() => setScreen("map")}><ArrowLeft size={16} /> Kembali ke peta</button><button className="back-link" onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button></div><span className="quiz-count">POS {position} · SOAL {qIndex + 1}/{posQuestions.length}</span></div>
       <div className="progress-track"><div style={{ width: `${((qIndex + 1) / posQuestions.length) * 100}%` }} /></div>
       <div className="quiz-card">
         <span className="eyebrow light">EVALUASI POS {position}</span>
@@ -417,7 +418,7 @@ export default function Page() {
           <div className="review-reason"><span className="bulb">💡</span><div><small>Alasan</small><p><Mixed text={item.reason} /></p></div></div>
         </article>;
       })}</div>
-      <div className="hero-actions centered"><button className="primary" onClick={() => setScreen("map")}>{position === QUIZ_POS ? "Kembali ke Peta, Buka Aula Bintang" : "Kembali ke Peta"} <ArrowRight size={18} /></button></div>
+      <div className="hero-actions centered"><button className="primary" onClick={() => setScreen("map")}>{position === QUIZ_POS ? "Kembali ke Peta, Buka Aula Bintang" : "Kembali ke Peta"} <ArrowRight size={18} /></button><button className="secondary" onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button></div>
     </section>; })()}
 
     {screen === "dashboard" && player && <StudentDashboard player={player} attempts={attemptsAll} partial={sessionAnswers} online={online} loading={dashLoading} materi={materiId} onSwitch={setMateriId} backLabel={dashFrom === "materi" ? "Kembali ke Kumpulan Materi" : "Kembali ke peta"} onBack={() => setScreen(dashFrom)} onReplay={resetAdventure} onMateri={openMateri} />}

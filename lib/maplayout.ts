@@ -23,6 +23,7 @@ export type MapLayout = {
   help?: Rect; next?: Rect; back?: Rect; nav: NavRects;
   // chip tambahan (peta yang gambarnya tidak punya tempat bawaan)
   chipProgress?: Rect; chipSummary?: Rect;
+  backChip?: Rect; // tombol teks "Kumpulan Materi" (peta yang tidak punya tombol kembali bawaan)
 };
 
 const box = (x: number, y: number, w: number, h: number): Box => ({ cx: x + w / 2, cy: y + h / 2, w, h });
@@ -40,7 +41,7 @@ const isimfiil: MapLayout = {
   },
   title: [12, 14, 402, 156], bubble: [424, 16, 338, 140], progress: [774, 22, 176, 108],
   summary: [8, 1266, 330, 130],
-  help: [954, 26, 66, 70], next: [828, 1298, 194, 124],
+  help: [954, 26, 66, 70], backChip: [776, 140, 240, 50], next: [828, 1298, 194, 124],
   nav: { home: [70, 1440, 215, 80], materi: [315, 1440, 200, 80], peta: [535, 1440, 195, 80], profil: [750, 1440, 195, 80] },
 };
 

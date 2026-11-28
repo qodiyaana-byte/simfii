@@ -553,7 +553,7 @@ a.brand{text-decoration:none;color:inherit}
 
 /* ===== GAMBAR POTRET (PETA DAN KUMPULAN MATERI) ===== */
 .map-frame.portrait{background:linear-gradient(180deg,#9be564,#6fb04a);display:flex;justify-content:center;border-radius:0;overflow:hidden}
-.map-board.photo.portrait{width:min(100%,780px);min-width:0;margin:0 auto;height:auto}
+.map-board.photo.portrait{width:100%;min-width:0;margin:0 auto;height:auto}
 .nav-hit{background:none;border:0;padding:0;border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .nav-hit:hover{background:#ffffff26}.nav-hit:focus-visible{outline:3px solid #ffd84d}
 .map-board.portrait .mp-pill .pl-icon{width:calc(3.6cqw*var(--k,1));height:calc(3.6cqw*var(--k,1));font-size:calc(2cqw*var(--k,1))}
@@ -583,7 +583,7 @@ a.brand{text-decoration:none;color:inherit}
 .mp-badge svg{width:60%;height:60%}
 /* Kumpulan Materi (gambar potret) */
 .hub-screen{background:linear-gradient(180deg,#f9f3e3,#e7f3d3);padding:0 0 18px}
-.hub-board{position:relative;width:min(100%,780px);margin:0 auto;aspect-ratio:1024/1536;container-type:inline-size;background:#fbf6ea;box-shadow:0 0 40px #0002}
+.hub-board{position:relative;width:100%;margin:0 auto;aspect-ratio:1024/1536;container-type:inline-size;background:#fbf6ea;box-shadow:0 0 40px #0002}
 .hub-img{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
 .hub-card:hover{background:#ffffff1f}
 .hub-progress{display:flex;align-items:center;gap:calc(1.2cqw*var(--k,1));pointer-events:none}
@@ -610,3 +610,12 @@ a.brand{text-decoration:none;color:inherit}
 .mp-chip b{font-size:calc(1.05cqw*var(--k,1))!important}
 .mp-chipbook b{white-space:nowrap}
 .map-board.portrait .mp-progress:not(.mp-chip) .mp-star{display:none}
+/* gambar potret dibentangkan penuh selebar layar */
+.map-board.photo.portrait,.hub-board{width:100%;max-width:none}
+.hub-board{box-shadow:none}
+.map-frame.portrait{display:block}
+
+.hub-board,.map-board.photo.portrait{max-width:none}
+.mp-backchip{display:flex;align-items:center;justify-content:center;gap:calc(.8cqw*var(--k,1));background:linear-gradient(180deg,#f5b73c,#d98f00);border:calc(.35cqw*var(--k,1)) solid #fff;border-radius:99px;color:#4a2f00;font-weight:900;font-size:calc(1.2cqw*var(--k,1));box-shadow:0 calc(.4cqw*var(--k,1)) 0 #a86d00,0 calc(.8cqw*var(--k,1)) calc(1cqw*var(--k,1)) #0004;white-space:nowrap}
+.mp-backchip:hover{transform:translateY(-2px)}
+.back-row{display:flex;gap:16px;flex-wrap:wrap}

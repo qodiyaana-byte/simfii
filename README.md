@@ -1,4 +1,4 @@
-# Simfii: Media Belajar Nahwu
+# Nahwu Quest: Media Belajar Nahwu
 
 Media pembelajaran bahasa Arab kelas VII. Setelah masuk, murid memilih materi di halaman **Kumpulan Materi**, lalu menjelajahi enam pos petualangan pada peta desa. Materi yang tersedia: **Mubtada' dan Khabar** (الْجُمْلَةُ الاِسْمِيَّةُ) dan **Isim dan Fi'il**.
 

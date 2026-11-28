@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Simfii — Belajar Nahwu",
+  title: "Nahwu Quest",
   description: "Petualangan interaktif bahasa Arab kelas VII: Mubtada' dan Khabar, serta Isim dan Fi'il, masing-masing melalui enam pos.",
 };
 
