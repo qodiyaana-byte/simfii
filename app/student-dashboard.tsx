@@ -3,10 +3,11 @@ import type { CSSProperties } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { Mixed } from "./mixed";
 import {
-  CATEGORY_LABELS, CATEGORY_POS, DEFAULT_KKM, POS_COLORS, POS_IDS, POS_NAMES, categoryTallies, formatDate, posTallies,
-  questionById, score100, starsOf, weakestCategory, type AnswerRow, type AttemptRow,
+  CATEGORIES_OF, CATEGORY_LABELS, DEFAULT_KKM, MATERI_KEYS, MATERI_LABEL, POS_COLORS, POS_IDS, POS_NAMES_OF, categoryPos, categoryTallies, formatDate,
+  materiOfAttempt, onlyMateri, posTallies, questionById, score100, starsOf, weakestCategory, type AnswerRow, type AttemptRow,
 } from "@/lib/analytics";
-import type { Question } from "@/lib/questions";
+import { materiById } from "@/lib/content";
+import type { MateriKey } from "@/lib/questions";
 
 type Props = {
   player: { nickname: string; classCode: string };
@@ -14,6 +15,9 @@ type Props = {
   partial: AnswerRow[];              // jawaban sesi yang belum lengkap
   online: boolean;
   loading: boolean;
+  materi: MateriKey;
+  onSwitch: (m: MateriKey) => void;
+  backLabel?: string;
   onBack: () => void;
   onReplay: () => void;
   onMateri: (pos: number) => void;
@@ -25,24 +29,28 @@ function Stars({ score, size = 22 }: { score: number; size?: number }) {
 }
 const Bar = ({ value, color }: { value: number | null; color: string }) => <span className="sd-bar"><i style={{ width: `${value ?? 0}%`, background: color }} /></span>;
 
-export function StudentDashboard({ player, attempts, partial, online, loading, onBack, onReplay, onMateri }: Props) {
+export function StudentDashboard({ player, attempts: allAttempts, partial, online, loading, materi, onSwitch, backLabel = "Kembali ke peta", onBack, onReplay, onMateri }: Props) {
+  const attempts = allAttempts.filter((a) => materiOfAttempt(a) === materi);
   const latest = attempts[0] ?? null;
-  const answers = latest ? latest.answers : partial;
-  const posT = posTallies(answers);
-  const cats = categoryTallies(answers);
+  const answers = latest ? latest.answers : onlyMateri(partial, materi);
+  const posNames = POS_NAMES_OF[materi];
+  const info = materiById[materi];
+  const posT = posTallies(answers, materi);
+  const cats = categoryTallies(answers, materi);
   const lastScore = latest ? score100(latest) : null;
   const bestScore = attempts.length ? Math.max(...attempts.map(score100)) : null;
   const doneCount = POS_IDS.filter((p) => posT[p].answered > 0).length;
-  const weak = weakestCategory(answers);
+  const weak = weakestCategory(answers, materi);
   const wrong = answers.filter((a) => !a.correct);
   const chart = [...attempts].slice(0, 8).reverse();
-  const catKeys = Object.keys(CATEGORY_LABELS) as Question["category"][];
+  const catKeys = CATEGORIES_OF[materi];
   const hasAny = answers.length > 0;
 
   return <section className="sd">
     <div className="sd-head">
-      <button className="back-link" onClick={onBack}><ArrowLeft size={16} /> Kembali ke peta</button>
+      <button className="back-link" onClick={onBack}><ArrowLeft size={16} /> {backLabel}</button>
       <h2>📊 Dashboard Saya</h2>
+      <div className="sd-switch" role="tablist" aria-label="Pilih materi">{MATERI_KEYS.map((m) => <button key={m} role="tab" aria-selected={m === materi} className={m === materi ? "on" : ""} onClick={() => onSwitch(m)}>{MATERI_LABEL[m]}</button>)}</div>
       {!online && <span className="sd-offline">Mode offline: nilai hanya tampil di perangkat ini</span>}
       {loading && <span className="sd-offline sd-load">Memuat riwayat...</span>}
     </div>
@@ -55,12 +63,12 @@ export function StudentDashboard({ player, attempts, partial, online, loading, o
       <div className="sd-stat s4"><small>Target KKM</small><b>{DEFAULT_KKM}</b><em>{lastScore === null ? "ayo mulai!" : lastScore >= DEFAULT_KKM ? "tercapai ✅" : `kurang ${DEFAULT_KKM - lastScore} poin`}</em></div>
     </div>
 
-    {!hasAny && <div className="sd-empty">Kamu belum mengerjakan soal. Kunjungi <b>Rumah Isim</b> di peta untuk memulai, lalu dashboard ini akan terisi dengan nilai dan sarannya.</div>}
+    {!hasAny && <div className="sd-empty">Kamu belum mengerjakan soal. Kunjungi <b>{posNames[1]}</b> di peta materi {MATERI_LABEL[materi]} untuk memulai, lalu dashboard ini akan terisi dengan nilai dan sarannya.</div>}
 
     {hasAny && <div className="sd-grid">
       <div className="sd-col">
         <section className="sd-panel"><h3>Nilai per Pos</h3>
-          {POS_IDS.map((p) => <div className="sd-row" key={p}><span><i style={{ background: POS_COLORS[p] }} />{POS_NAMES[p]}</span><Bar value={posT[p].percent} color={POS_COLORS[p]} /><b>{posT[p].percent ?? "-"}</b></div>)}
+          {POS_IDS.map((p) => <div className="sd-row" key={p}><span><i style={{ background: POS_COLORS[p] }} />{posNames[p]}</span><Bar value={posT[p].percent} color={POS_COLORS[p]} /><b>{posT[p].percent ?? "-"}</b></div>)}
         </section>
         <section className="sd-panel"><h3>Kemampuanmu</h3>
           {catKeys.map((c) => <div className="sd-row" key={c}><span>{CATEGORY_LABELS[c]}</span><Bar value={cats[c].percent} color={cats[c].percent !== null && cats[c].percent! < DEFAULT_KKM ? "#ee5a8f" : "#2eb96e"} /><b>{cats[c].percent ?? "-"}</b></div>)}
@@ -71,9 +79,9 @@ export function StudentDashboard({ player, attempts, partial, online, loading, o
         <section className="sd-panel sd-advice"><h3>💡 Saran Belajar</h3>
           {weak ? <>
             <p>Bagian yang paling perlu diperkuat: <b>{CATEGORY_LABELS[weak]}</b> ({cats[weak].percent}%).</p>
-            {CATEGORY_POS[weak] <= 3
-              ? <button className="primary" onClick={() => onMateri(CATEGORY_POS[weak])}>Pelajari ulang di {POS_NAMES[CATEGORY_POS[weak]]}</button>
-              : <p className="sd-small">Baca ulang Ringkasan Materi di peta, lalu coba lagi soal Kantor Detektif.</p>}
+            {info.slides[categoryPos(materi, weak)]
+              ? <button className="primary" onClick={() => onMateri(categoryPos(materi, weak))}>Pelajari ulang di {posNames[categoryPos(materi, weak)]}</button>
+              : <p className="sd-small">Baca ulang Ringkasan Materi di peta, lalu coba lagi soal {posNames[categoryPos(materi, weak)]}.</p>}
           </> : <p>Hebat! Semua kemampuanmu sudah mencapai target. Coba ulangi petualangan untuk mengejar bintang penuh ⭐.</p>}
         </section>
         <section className="sd-panel sd-wrong"><h3>Soal yang Perlu Diulang <small>({wrong.length})</small></h3>
@@ -97,6 +105,6 @@ export function StudentDashboard({ player, attempts, partial, online, loading, o
       </div>
     </div>}
 
-    <div className="sd-foot"><button className="secondary" onClick={onReplay}><RotateCcw size={16} /> Ulangi Petualangan</button><button className="primary" onClick={onBack}>Kembali ke Peta</button></div>
+    <div className="sd-foot"><button className="secondary" onClick={onReplay}><RotateCcw size={16} /> Ulangi Petualangan</button><button className="primary" onClick={onBack}>{backLabel}</button></div>
   </section>;
 }

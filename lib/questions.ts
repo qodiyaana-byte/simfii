@@ -1,7 +1,9 @@
+export type MateriKey = "mubtada" | "isimfiil";
 export type Question = {
   id: string;
+  materi: MateriKey;
   position: 1 | 2 | 3 | 4 | 5;
-  category: "isim" | "fiil" | "beda" | "campuran";
+  category: "isim" | "fiil" | "beda" | "campuran" | "ismiyah" | "definisi" | "syarat" | "implikasi";
   prompt: string;
   options: string[]; // urutan sesuai tampilan (A, B, C, ...)
   answer: string;
@@ -12,9 +14,10 @@ export type Question = {
 const q = (
   id: string, position: Question["position"], category: Question["category"],
   prompt: string, options: string[], answerIndex: number, reason: string
-): Question => ({ id, position, category, prompt, options, answer: options[answerIndex], reason });
+): Question => ({ id, materi: id.startsWith("m") ? "mubtada" : "isimfiil", position, category, prompt, options, answer: options[answerIndex], reason });
 
 export const questions: Question[] = [
+  // ===== MATERI ISIM DAN FI'IL (id diawali "p") =====
   // POS 1: Isim (5 soal)
   q("p1-01", 1, "isim", "Manakah pengertian isim yang tepat?",
     ["Kata yang menunjukkan pekerjaan dan terikat waktu", "Kata yang menunjukkan nama orang, benda, atau tempat dan tidak terikat waktu", "Kata yang hanya digunakan untuk memanggil"], 1,
@@ -114,4 +117,107 @@ export const questions: Question[] = [
   q("p5-07", 5, "campuran", "Kalimat manakah yang semua katanya isim?",
     ["يَكْتُبُ الطَّالِبُ", "هٰذَا بَيْتٌ كَبِيرٌ", "سَيَذْهَبُ أَبِي"], 1,
     "هٰذَا (ini, kata tunjuk), بَيْتٌ (rumah), dan كَبِيرٌ (besar) semuanya isim. Dua kalimat lainnya mengandung fi'il: يَكْتُبُ dan سَيَذْهَبُ."),
+
+  // ===== MATERI MUBTADA' DAN KHABAR (id diawali "m") =====
+  // POS 1: Jumlah ismiyah (5 soal)
+  q("m1-01", 1, "ismiyah", "Jumlah ismiyah adalah kalimat yang diawali dengan ...",
+    ["Huruf", "Fi'il", "Isim"], 2,
+    "Jumlah ismiyah artinya kalimat yang diawali isim. Kalimat yang diawali fi'il disebut jumlah fi'liyah."),
+  q("m1-02", 1, "ismiyah", "Jumlah ismiyah tersusun dari dua bagian, yaitu ...",
+    ["Mubtada' dan khabar", "Isim dan huruf", "Fi'il dan fa'il"], 0,
+    "Jumlah ismiyah terdiri dari mubtada' (subjek) dan khabar (predikat)."),
+  q("m1-03", 1, "ismiyah", "Manakah yang termasuk jumlah ismiyah?",
+    ["كَتَبَ الطَّالِبُ", "الْبَيْتُ كَبِيرٌ", "يَقْرَأُ أَحْمَدُ"], 1,
+    "الْبَيْتُ كَبِيرٌ diawali isim (الْبَيْتُ), sehingga jumlah ismiyah. كَتَبَ dan يَقْرَأُ adalah fi'il, jadi kalimatnya diawali fi'il."),
+  q("m1-04", 1, "ismiyah", "Dalam bahasa Indonesia, mubtada' sama dengan ...",
+    ["Objek", "Predikat", "Subjek"], 2,
+    "Mubtada' adalah pokok yang dibicarakan, yaitu subjek. Khabar adalah predikat."),
+  q("m1-05", 1, "ismiyah", "Kalimat الْكِتَابُ جَدِيدٌ (Buku itu baru) disebut ...",
+    ["Jumlah ismiyah", "Huruf jar", "Jumlah fi'liyah"], 0,
+    "Kalimat ini diawali isim الْكِتَابُ (mubtada') dan dilengkapi جَدِيدٌ (khabar), maka disebut jumlah ismiyah."),
+
+  // POS 2: Definisi mubtada' dan khabar (5 soal)
+  q("m2-01", 2, "definisi", "Manakah definisi mubtada' yang tepat?",
+    ["Kata kerja yang menunjukkan waktu lampau", "Isim di awal jumlah ismiyah yang menjadi pokok pembicaraan (subjek)", "Bagian yang menerangkan keadaan di akhir kalimat"], 1,
+    "Mubtada' adalah isim di awal kalimat yang menjadi pokok pembicaraan. Bagian yang menerangkan keadaan adalah khabar."),
+  q("m2-02", 2, "definisi", "Manakah definisi khabar yang tepat?",
+    ["Bagian yang selalu berada di awal kalimat", "Kata yang menunjukkan nama orang saja", "Bagian yang menyempurnakan makna mubtada' (predikat)"], 2,
+    "Khabar menyempurnakan makna mubtada' dengan memberi keterangan tentangnya, dan letaknya setelah mubtada'."),
+  q("m2-03", 2, "definisi", "Pada kalimat الْبَيْتُ كَبِيرٌ, mubtada'-nya adalah ...",
+    ["الْبَيْتُ", "كَبِيرٌ", "الْبَيْتُ كَبِيرٌ"], 0,
+    "الْبَيْتُ (rumah itu) berada di awal dan menjadi yang dibicarakan, sehingga mubtada'. كَبِيرٌ adalah khabar."),
+  q("m2-04", 2, "definisi", "Pada kalimat الطَّالِبُ مُجْتَهِدٌ, khabar-nya adalah ...",
+    ["الطَّالِبُ", "مُجْتَهِدٌ", "الطَّالِبُ مُجْتَهِدٌ"], 1,
+    "مُجْتَهِدٌ (rajin) memberi keterangan tentang الطَّالِبُ, sehingga ia khabar."),
+  q("m2-05", 2, "definisi", "Kalimat الْمَاءُ بَارِدٌ berarti dan mubtada'-nya adalah ...",
+    ["Air itu panas; mubtada'-nya الْمَاءُ", "Air itu dingin; mubtada'-nya بَارِدٌ", "Air itu dingin; mubtada'-nya الْمَاءُ"], 2,
+    "الْمَاءُ بَارِدٌ berarti air itu dingin. الْمَاءُ yang dibicarakan sehingga mubtada', sedangkan بَارِدٌ adalah khabar."),
+
+  // POS 3: Syarat mubtada' dan khabar (7 soal)
+  q("m3-01", 3, "syarat", "Syarat mubtada' adalah isim yang ...",
+    ["Ma'rifat", "Berupa fi'il", "Nakirah (bertanwin)"], 0,
+    "Mubtada' harus isim ma'rifat, yaitu isim yang sudah jelas atau tertentu."),
+  q("m3-02", 3, "syarat", "Manakah kata yang dapat menjadi mubtada'?",
+    ["يَكْتُبُ", "الْقَلَمُ", "قَلَمٌ"], 1,
+    "الْقَلَمُ diawali ال sehingga ma'rifat. قَلَمٌ nakirah (bertanwin), sedangkan يَكْتُبُ adalah fi'il."),
+  q("m3-03", 3, "syarat", "Manakah yang termasuk isim ma'rifat?",
+    ["كِتَابٌ", "مَدْرَسَةٌ", "أَحْمَدُ"], 2,
+    "أَحْمَدُ adalah nama orang, sehingga ma'rifat. مَدْرَسَةٌ dan كِتَابٌ bertanwin sehingga nakirah."),
+  q("m3-04", 3, "syarat", "Khabar pada umumnya berupa ...",
+    ["Isim nakirah", "Isim ma'rifat yang dimasuki ال", "Fi'il madhi"], 0,
+    "Khabar pada umumnya isim nakirah yang bertanwin, misalnya كَبِيرٌ."),
+  q("m3-05", 3, "syarat", "Manakah yang merupakan jumlah ismiyah lengkap dengan khabar yang memenuhi syarat?",
+    ["كَبِيرٌ", "الْبَيْتُ كَبِيرٌ", "الْبَيْتُ الْكَبِيرُ"], 1,
+    "الْبَيْتُ كَبِيرٌ memiliki mubtada' ma'rifat dan khabar nakirah. الْبَيْتُ الْكَبِيرُ berarti \"rumah yang besar\" (bukan kalimat lengkap) karena kata kedua diberi ال, sedangkan كَبِيرٌ hanya satu kata."),
+  q("m3-06", 3, "syarat", "Pada kalimat هٰذَا قَلَمٌ, mengapa هٰذَا dapat menjadi mubtada'?",
+    ["Karena هٰذَا bertanwin", "Karena هٰذَا adalah fi'il", "Karena هٰذَا kata tunjuk sehingga ma'rifat"], 2,
+    "هٰذَا (ini) adalah kata tunjuk, salah satu jenis isim ma'rifat, sehingga memenuhi syarat mubtada'."),
+  q("m3-07", 3, "syarat", "Mengapa أَحْمَدُ pantas menjadi mubtada'?",
+    ["Karena ia nama orang sehingga ma'rifat", "Karena ia bertanwin", "Karena ia fi'il"], 0,
+    "Nama orang adalah isim ma'rifat. Syarat mubtada' terpenuhi karena ia isim dan ma'rifat."),
+
+  // POS 4: Implikasi, yaitu marfu' dan kesesuaian jenis (6 soal)
+  q("m4-01", 4, "implikasi", "Mubtada' dan khabar berstatus ...",
+    ["Majrur", "Marfu'", "Manshub"], 1,
+    "Mubtada' dan khabar sama-sama marfu', yaitu huruf terakhirnya berharakat dhammah atau tanwin dhammah."),
+  q("m4-02", 4, "implikasi", "Huruf terakhir mubtada' الْكِتَابُ berharakat ...",
+    ["Fathah", "Kasrah", "Dhammah"], 2,
+    "Mubtada' marfu' sehingga huruf terakhirnya dhammah, yaitu الْكِتَابُ."),
+  q("m4-03", 4, "implikasi", "Pada الْكِتَابُ جَدِيدٌ, harakat akhir khabar جَدِيدٌ adalah ...",
+    ["Tanwin dhammah (ـٌ)", "Tanwin fathah (ـً)", "Tanwin kasrah (ـٍ)"], 0,
+    "Khabar nakirah yang marfu' berharakat tanwin dhammah (ـٌ)."),
+  q("m4-04", 4, "implikasi", "Khabar yang tepat untuk mubtada' الْبِنْتُ adalah ...",
+    ["نَشِيطٌ", "نَشِيطَةٌ", "نَشِيطُونَ"], 1,
+    "الْبِنْتُ muannats (anak perempuan), sehingga khabarnya juga muannats: نَشِيطَةٌ dengan akhiran ة."),
+  q("m4-05", 4, "implikasi", "Manakah kalimat yang jenis mubtada' dan khabarnya sesuai?",
+    ["الْبِنْتُ نَشِيطٌ", "الْوَلَدُ نَشِيطَةٌ", "الْوَلَدُ نَشِيطٌ"], 2,
+    "الْوَلَدُ mudzakkar dan نَشِيطٌ mudzakkar, jadi sesuai. Dua pilihan lain mencampur mudzakkar dan muannats."),
+  q("m4-06", 4, "implikasi", "Mengapa khabar pada السَّيَّارَةُ جَدِيدَةٌ berakhiran ة?",
+    ["Karena khabar harus sama jenis dengan mubtada' (muannats)", "Karena khabar selalu muannats", "Karena mubtada'-nya mudzakkar"], 0,
+    "السَّيَّارَةُ (mobil) muannats, sehingga khabarnya mengikuti dan berakhiran ة. Khabar tidak selalu muannats."),
+
+  // POS 5: Soal akhir, satu tingkat lebih sulit (7 soal)
+  q("m5-01", 5, "campuran", "Tentukan mubtada' dan khabar pada kalimat الْمَسْجِدُ نَظِيفٌ!",
+    ["Mubtada' = نَظِيفٌ, khabar = الْمَسْجِدُ", "Mubtada' = الْمَسْجِدُ, khabar = نَظِيفٌ", "Keduanya mubtada'"], 1,
+    "الْمَسْجِدُ berada di awal dan menjadi yang dibicarakan (mubtada'). نَظِيفٌ (bersih) adalah keterangannya (khabar)."),
+  q("m5-02", 5, "campuran", "Manakah kalimat yang termasuk jumlah ismiyah?",
+    ["سَيَكْتُبُ الدَّرْسَ", "يَذْهَبُ أَحْمَدُ إِلَى الْمَدْرَسَةِ", "أَحْمَدُ طَالِبٌ"], 2,
+    "أَحْمَدُ طَالِبٌ diawali isim (أَحْمَدُ). Dua kalimat lain diawali fi'il (يَذْهَبُ dan سَيَكْتُبُ)."),
+  q("m5-03", 5, "campuran", "Kalimat الْحَدِيقَةُ جَمِيلَةٌ berarti dan khabar-nya adalah ...",
+    ["Taman itu indah; khabar-nya جَمِيلَةٌ", "Taman itu indah; khabar-nya الْحَدِيقَةُ", "Taman itu luas; khabar-nya جَمِيلَةٌ"], 0,
+    "الْحَدِيقَةُ جَمِيلَةٌ berarti taman itu indah. جَمِيلَةٌ menerangkan الْحَدِيقَةُ sehingga khabar."),
+  q("m5-04", 5, "campuran", "Pernyataan yang benar tentang mubtada' dan khabar adalah ...",
+    ["Mubtada' harus nakirah dan khabar harus ma'rifat", "Mubtada' pada umumnya ma'rifat dan khabar nakirah, keduanya marfu'", "Mubtada' dan khabar boleh manshub"], 1,
+    "Mubtada' pada umumnya ma'rifat, khabar pada umumnya nakirah, dan keduanya marfu'. Pilihan lain terbalik atau salah."),
+  q("m5-05", 5, "campuran", "Manakah kalimat yang mubtada' dan khabarnya benar dan sesuai?",
+    ["الْمَدْرَسَةَ كَبِيرَةٌ", "الْمَدْرَسَةُ كَبِيرٌ", "الْمَدْرَسَةُ كَبِيرَةٌ"], 2,
+    "الْمَدْرَسَةُ muannats dan marfu', maka khabar كَبِيرَةٌ sesuai. الْمَدْرَسَةُ كَبِيرٌ tidak sesuai jenis (muannats dengan mudzakkar), dan الْمَدْرَسَةَ كَبِيرَةٌ mubtada'-nya manshub (berharakat fathah)."),
+  q("m5-06", 5, "campuran", "Manakah yang BUKAN jumlah ismiyah?",
+    ["هٰذَا كِتَابٌ", "الطَّالِبُ مُجْتَهِدٌ", "قَرَأَ أَحْمَدُ الْكِتَابَ", "الْبَابُ مَفْتُوحٌ"], 2,
+    "قَرَأَ أَحْمَدُ الْكِتَابَ diawali fi'il (قَرَأَ), jadi bukan jumlah ismiyah. Tiga kalimat lain diawali isim."),
+  q("m5-07", 5, "campuran", "Lengkapi: الْبِنْتُ ... (anak perempuan itu rajin). Khabar yang tepat adalah ...",
+    ["مُجْتَهِدَةٌ", "الْمُجْتَهِدَةُ", "مُجْتَهِدٌ"], 0,
+    "مُجْتَهِدَةٌ muannats (sesuai الْبِنْتُ), bertanwin (nakirah), dan marfu'. الْمُجْتَهِدَةُ diberi ال sehingga bukan khabar."),
 ];
+
+export const questionsOf = (materi: MateriKey): Question[] => questions.filter((item) => item.materi === materi);

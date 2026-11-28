@@ -3,8 +3,12 @@ export type Word = { arabic: string; meaning: string; tag?: FiilTag };
 export type Seg = { t: string; hl?: boolean };
 export type Sign = { name: string; rule: string; segs: Seg[]; part: string; meaning: string };
 export type WordGroup = { title: string; note?: string; tag?: FiilTag; words: Word[] };
+export type PartWord = { ar: string; id: string };
+// Satu kalimat jumlah ismiyah yang dipecah menjadi mubtada' dan khabar.
+export type PartExample = { mubtada: PartWord; khabar: PartWord; meaning: string; note?: string };
 export type Slide =
   | { kind: "definition"; title: string; arabic: string; text: string; examples: Word[] }
+  | { kind: "parts"; title: string; intro: string; showRoles?: boolean; items: PartExample[]; tip?: string }
   | { kind: "signs"; title: string; intro: string; items: Sign[]; tag?: FiilTag }
   | { kind: "words"; title: string; intro: string; groups: WordGroup[] }
   | { kind: "mindmap"; title: string }
@@ -22,7 +26,7 @@ export const tagLabels: Record<FiilTag, string> = {
   amr: "Fi'il Amr · perintah",
 };
 
-export const positions: MapPosition[] = [
+export const isimfiilPositions: MapPosition[] = [
   { id: 1, title: "Rumah Isim", subtitle: "Definisi, ciri, dan contoh isim", icon: "🏠", arabic: "الاِسْمُ", x: 15.6, y: 34.2, color: "#f5a623" },
   { id: 2, title: "Rumah Fi'il", subtitle: "Definisi, tanda, dan contoh fi'il", icon: "🏡", arabic: "الْفِعْلُ", x: 46, y: 30.8, color: "#1e88e5" },
   { id: 3, title: "Balai Peta Konsep", subtitle: "Perbedaan isim dan fi'il", icon: "🗺️", arabic: "الْفَرْقُ", x: 82, y: 38.6, color: "#8e44ad" },
@@ -31,7 +35,7 @@ export const positions: MapPosition[] = [
   { id: 6, title: "Dermaga Bintang", subtitle: "Skor setiap pos dan nilai akhir", icon: "⛵", arabic: "النَّتِيجَةُ", x: 65.4, y: 88.4, color: "#f2b01e" },
 ];
 
-export const slides: Record<number, Slide[]> = {
+export const isimfiilSlides: Record<number, Slide[]> = {
   1: [
     {
       kind: "definition", title: "Pengertian Isim", arabic: "الاِسْمُ",
@@ -147,3 +151,204 @@ export const tableRows = [
   { aspect: "Bertemu تْ atau تُ", isim: "Tidak bisa ✗", fiil: "Bisa ✓" },
   { aspect: "Contoh", isim: "بَيْتٌ (rumah), الْكِتَابُ (buku itu), طَالِبٌ (siswa)", fiil: "كَتَبَ (telah menulis), يَقْرَأُ (membaca), سَيَذْهَبُ (akan pergi)" },
 ];
+
+/* ============================================================
+   MATERI 01: MUBTADA' DAN KHABAR (الْجُمْلَةُ الاِسْمِيَّةُ)
+   Susunan pos sama dengan materi Isim dan Fi'il: 6 pos pada peta yang sama.
+   Pos 1-4 = materi lalu evaluasi (5, 5, 7, 6 soal), Pos 5 = soal akhir (7 soal), Pos 6 = skor.
+   ============================================================ */
+export const mubtadaPositions: MapPosition[] = [
+  { id: 1, title: "Rumah Ismiyah", subtitle: "Jumlah ismiyah = mubtada' + khabar", icon: "🏠", arabic: "الْجُمْلَةُ الاِسْمِيَّةُ", x: 15.6, y: 34.2, color: "#f5a623" },
+  { id: 2, title: "Rumah Definisi", subtitle: "Definisi mubtada' dan khabar", icon: "🏡", arabic: "التَّعْرِيفُ", x: 46, y: 30.8, color: "#1e88e5" },
+  { id: 3, title: "Balai Syarat", subtitle: "Syarat mubtada' dan khabar", icon: "📜", arabic: "الشُّرُوطُ", x: 82, y: 38.6, color: "#8e44ad" },
+  { id: 4, title: "Kantor Implikasi", subtitle: "Marfu' dan kesesuaian jenis", icon: "🔎", arabic: "الْحُكْمُ", x: 40.5, y: 62.5, color: "#e03a5a" },
+  { id: 5, title: "Taman Tantangan", subtitle: "Soal akhir yang lebih sulit", icon: "⛲", arabic: "التَّحَدِّي", x: 68, y: 70.8, color: "#00a38c" },
+  { id: 6, title: "Dermaga Bintang", subtitle: "Skor setiap pos dan nilai akhir", icon: "⛵", arabic: "النَّتِيجَةُ", x: 65.4, y: 88.4, color: "#f2b01e" },
+];
+
+export const mubtadaSlides: Record<number, Slide[]> = {
+  1: [
+    {
+      kind: "definition", title: "Jumlah Ismiyah itu Mubtada' dan Khabar", arabic: "الْجُمْلَةُ الاِسْمِيَّةُ",
+      text: "Jumlah ismiyah adalah kalimat yang diawali dengan isim. Kalimat ini tersusun dari dua bagian, yaitu mubtada' dan khabar. Jadi, setiap kali kamu melihat jumlah ismiyah, carilah dua bagian itu.",
+      examples: [
+        { arabic: "الْبَيْتُ كَبِيرٌ", meaning: "Rumah itu besar" },
+        { arabic: "أَحْمَدُ مُجْتَهِدٌ", meaning: "Ahmad rajin" },
+        { arabic: "الْكِتَابُ جَدِيدٌ", meaning: "Buku itu baru" },
+      ],
+    },
+    {
+      kind: "parts", title: "Mubtada' = Subjek, Khabar = Predikat", showRoles: true,
+      intro: "Ingat kalimat Indonesia \"Ahmad rajin\". Ahmad adalah yang sedang dibicarakan (subjek), sedangkan rajin adalah keterangan tentang Ahmad (predikat). Dalam bahasa Arab, subjek disebut mubtada' dan predikat disebut khabar.",
+      items: [
+        { mubtada: { ar: "أَحْمَدُ", id: "Ahmad" }, khabar: { ar: "مُجْتَهِدٌ", id: "rajin" }, meaning: "Ahmad rajin" },
+        { mubtada: { ar: "الْبَيْتُ", id: "rumah itu" }, khabar: { ar: "كَبِيرٌ", id: "besar" }, meaning: "Rumah itu besar" },
+      ],
+      tip: "Cara mudah: tanya \"siapa atau apa yang dibicarakan?\" Jawabannya mubtada'. Lalu tanya \"bagaimana dia?\" Jawabannya khabar.",
+    },
+    {
+      kind: "parts", title: "Contoh Mubtada' dan Khabar", showRoles: true,
+      intro: "Perhatikan setiap kalimat. Biru adalah mubtada' (subjek), merah muda adalah khabar (predikat).",
+      items: [
+        { mubtada: { ar: "الْمَدْرَسَةُ", id: "sekolah itu" }, khabar: { ar: "وَاسِعَةٌ", id: "luas" }, meaning: "Sekolah itu luas" },
+        { mubtada: { ar: "الطَّالِبُ", id: "siswa itu" }, khabar: { ar: "مُجْتَهِدٌ", id: "rajin" }, meaning: "Siswa itu rajin" },
+        { mubtada: { ar: "الْمَاءُ", id: "air itu" }, khabar: { ar: "بَارِدٌ", id: "dingin" }, meaning: "Air itu dingin" },
+        { mubtada: { ar: "الْقَلَمُ", id: "pena itu" }, khabar: { ar: "جَدِيدٌ", id: "baru" }, meaning: "Pena itu baru" },
+      ],
+    },
+  ],
+  2: [
+    {
+      kind: "definition", title: "Definisi Mubtada'", arabic: "الْمُبْتَدَأُ",
+      text: "Mubtada' adalah isim yang berada di awal jumlah ismiyah dan menjadi pokok pembicaraan (subjek). Kata kuncinya: letaknya di depan dan itulah yang sedang dibicarakan.",
+      examples: [
+        { arabic: "الْبَيْتُ", meaning: "mubtada' pada: الْبَيْتُ كَبِيرٌ" },
+        { arabic: "الْكِتَابُ", meaning: "mubtada' pada: الْكِتَابُ جَدِيدٌ" },
+        { arabic: "أَحْمَدُ", meaning: "mubtada' pada: أَحْمَدُ مُجْتَهِدٌ" },
+      ],
+    },
+    {
+      kind: "definition", title: "Definisi Khabar", arabic: "الْخَبَرُ",
+      text: "Khabar adalah bagian yang menyempurnakan makna mubtada' (predikat). Ia memberi tahu keadaan atau keterangan tentang mubtada', dan letaknya setelah mubtada'.",
+      examples: [
+        { arabic: "كَبِيرٌ", meaning: "khabar pada: الْبَيْتُ كَبِيرٌ" },
+        { arabic: "جَدِيدٌ", meaning: "khabar pada: الْكِتَابُ جَدِيدٌ" },
+        { arabic: "مُجْتَهِدٌ", meaning: "khabar pada: أَحْمَدُ مُجْتَهِدٌ" },
+      ],
+    },
+    {
+      kind: "parts", title: "Contoh Mubtada' dan Khabar", showRoles: true,
+      intro: "Temukan mubtada' di depan dan khabar di belakangnya pada setiap kalimat berikut.",
+      items: [
+        { mubtada: { ar: "الْوَلَدُ", id: "anak laki-laki itu" }, khabar: { ar: "ذَكِيٌّ", id: "pandai" }, meaning: "Anak laki-laki itu pandai" },
+        { mubtada: { ar: "الْبِنْتُ", id: "anak perempuan itu" }, khabar: { ar: "نَشِيطَةٌ", id: "giat" }, meaning: "Anak perempuan itu giat" },
+        { mubtada: { ar: "الدَّرْسُ", id: "pelajaran itu" }, khabar: { ar: "سَهْلٌ", id: "mudah" }, meaning: "Pelajaran itu mudah" },
+        { mubtada: { ar: "الْمَسْجِدُ", id: "masjid itu" }, khabar: { ar: "نَظِيفٌ", id: "bersih" }, meaning: "Masjid itu bersih" },
+      ],
+    },
+  ],
+  3: [
+    {
+      kind: "signs", title: "Syarat Mubtada'",
+      intro: "Syarat utama mubtada' adalah isim ma'rifat, yaitu isim yang sudah jelas atau tertentu. Perhatikan bagian merah sebagai penandanya.",
+      items: [
+        { name: "1. Berupa isim", rule: "Mubtada' harus isim, bukan fi'il dan bukan huruf.", segs: [{ t: "الْبَيْتُ", hl: true }, { t: " كَبِيرٌ" }], part: "الْبَيْتُ", meaning: "rumah itu besar" },
+        { name: "2. Ma'rifat: dimasuki ال", rule: "Isim yang diawali ال sudah tertentu, sehingga ma'rifat.", segs: [{ t: "الْ", hl: true }, { t: "قَلَمُ" }], part: "الْ", meaning: "pena itu" },
+        { name: "3. Ma'rifat: nama orang", rule: "Nama orang pasti tertentu, sehingga ma'rifat.", segs: [{ t: "أَحْمَدُ", hl: true }, { t: " مُجْتَهِدٌ" }], part: "أَحْمَدُ", meaning: "Ahmad rajin" },
+        { name: "4. Ma'rifat: kata tunjuk", rule: "Kata tunjuk seperti هٰذَا (ini) dan هٰذِهِ (ini, perempuan) juga ma'rifat.", segs: [{ t: "هٰذَا", hl: true }, { t: " قَلَمٌ" }], part: "هٰذَا", meaning: "ini pena" },
+      ],
+    },
+    {
+      kind: "signs", title: "Syarat Khabar",
+      intro: "Khabar pada umumnya berupa isim nakirah, yaitu isim yang belum tertentu dan ditandai tanwin. Perhatikan bagian merah sebagai penandanya.",
+      items: [
+        { name: "1. Berupa isim nakirah", rule: "Khabar tidak tertentu, sehingga bertanwin di akhirnya.", segs: [{ t: "كَبِي" }, { t: "رٌ", hl: true }], part: "رٌ", meaning: "(sesuatu yang) besar" },
+        { name: "2. Tidak dimasuki ال", rule: "Jika diberi ال (الْكَبِيرُ), maknanya menjadi \"yang besar\" dan tidak lagi menjadi khabar.", segs: [{ t: "كَبِيرٌ", hl: true }], part: "كَبِيرٌ", meaning: "besar (tanpa ال)" },
+        { name: "3. Letaknya setelah mubtada'", rule: "Mubtada' berada di depan, lalu khabar menyusul di belakangnya.", segs: [{ t: "الْبَيْتُ " }, { t: "كَبِيرٌ", hl: true }], part: "كَبِيرٌ", meaning: "rumah itu besar" },
+      ],
+    },
+    {
+      kind: "parts", title: "Contoh Syarat Mubtada' dan Khabar", showRoles: false,
+      intro: "Lihat bagaimana setiap kalimat memenuhi syarat mubtada' (ma'rifat) dan khabar (nakirah).",
+      items: [
+        { mubtada: { ar: "الْكِتَابُ", id: "buku itu" }, khabar: { ar: "جَدِيدٌ", id: "baru" }, meaning: "Buku itu baru", note: "Mubtada' ma'rifat karena diawali ال. Khabar nakirah karena bertanwin." },
+        { mubtada: { ar: "أَحْمَدُ", id: "Ahmad" }, khabar: { ar: "مُجْتَهِدٌ", id: "rajin" }, meaning: "Ahmad rajin", note: "Mubtada' ma'rifat karena nama orang. Khabar nakirah karena bertanwin." },
+        { mubtada: { ar: "هٰذَا", id: "ini" }, khabar: { ar: "قَلَمٌ", id: "pena" }, meaning: "Ini pena", note: "Mubtada' ma'rifat karena kata tunjuk. Khabar nakirah karena bertanwin." },
+      ],
+    },
+  ],
+  4: [
+    {
+      kind: "signs", title: "Implikasi 1: Mubtada' dan Khabar Marfu'",
+      intro: "Karena menjadi pokok kalimat, mubtada' dan khabar sama-sama marfu'. Marfu' artinya huruf terakhirnya berharakat dhammah atau tanwin dhammah. Perhatikan bagian merah.",
+      items: [
+        { name: "1. Mubtada' berakhiran dhammah", rule: "Mubtada' ma'rifat dibaca dhammah (ـُ) di akhir kata.", segs: [{ t: "الْبَيْ" }, { t: "تُ", hl: true }], part: "تُ", meaning: "rumah itu" },
+        { name: "2. Khabar berakhiran tanwin dhammah", rule: "Khabar nakirah dibaca tanwin dhammah (ـٌ) di akhir kata.", segs: [{ t: "كَبِي" }, { t: "رٌ", hl: true }], part: "رٌ", meaning: "besar" },
+        { name: "3. Keduanya marfu'", rule: "Dalam satu kalimat, kedua akhir kata itu sama-sama marfu'.", segs: [{ t: "الْبَيْ" }, { t: "تُ", hl: true }, { t: " كَبِي" }, { t: "رٌ", hl: true }], part: "تُ + رٌ", meaning: "rumah itu besar" },
+        { name: "4. Nama orang juga marfu'", rule: "Mubtada' berupa nama orang tetap berakhiran dhammah.", segs: [{ t: "أَحْمَ" }, { t: "دُ", hl: true }, { t: " مُجْتَهِ" }, { t: "دٌ", hl: true }], part: "دُ + دٌ", meaning: "Ahmad rajin" },
+      ],
+    },
+    {
+      kind: "signs", title: "Implikasi 2: Khabar Sesuai Jenis Mubtada'",
+      intro: "Khabar mengikuti jenis mubtada'. Mubtada' mudzakkar (maskulin) memakai khabar mudzakkar. Mubtada' muannats (feminin) memakai khabar muannats yang berakhiran ة.",
+      items: [
+        { name: "1. Mubtada' mudzakkar", rule: "Khabar juga mudzakkar, tanpa ة di akhirnya.", segs: [{ t: "الْقَلَمُ " }, { t: "جَدِيدٌ", hl: true }], part: "جَدِيدٌ", meaning: "pena itu baru" },
+        { name: "2. Mubtada' muannats", rule: "Khabar ikut muannats, ditandai ة di akhirnya.", segs: [{ t: "السَّيَّارَةُ جَدِيدَ" }, { t: "ةٌ", hl: true }], part: "ةٌ", meaning: "mobil itu baru" },
+        { name: "3. Muannats untuk perempuan", rule: "Anak perempuan (الْبِنْتُ) adalah muannats, maka khabarnya berakhiran ة.", segs: [{ t: "الْبِنْتُ نَشِيطَ" }, { t: "ةٌ", hl: true }], part: "ةٌ", meaning: "anak perempuan itu giat" },
+      ],
+    },
+    {
+      kind: "parts", title: "Contoh Lengkap: Marfu' dan Sesuai Jenis", showRoles: false,
+      intro: "Setiap kalimat berikut memiliki mubtada' dan khabar yang marfu' serta sama jenisnya.",
+      items: [
+        { mubtada: { ar: "الْوَلَدُ", id: "anak laki-laki itu" }, khabar: { ar: "نَشِيطٌ", id: "giat" }, meaning: "Anak laki-laki itu giat", note: "Keduanya marfu'. Mudzakkar dengan mudzakkar." },
+        { mubtada: { ar: "الْبِنْتُ", id: "anak perempuan itu" }, khabar: { ar: "نَشِيطَةٌ", id: "giat" }, meaning: "Anak perempuan itu giat", note: "Keduanya marfu'. Muannats dengan muannats (ة)." },
+        { mubtada: { ar: "الْمَسْجِدُ", id: "masjid itu" }, khabar: { ar: "نَظِيفٌ", id: "bersih" }, meaning: "Masjid itu bersih", note: "Keduanya marfu'. Mudzakkar dengan mudzakkar." },
+        { mubtada: { ar: "الْحَدِيقَةُ", id: "taman itu" }, khabar: { ar: "جَمِيلَةٌ", id: "indah" }, meaning: "Taman itu indah", note: "Keduanya marfu'. Muannats dengan muannats (ة)." },
+      ],
+    },
+  ],
+};
+
+export const mubtadaSummaryRows = [
+  { aspect: "Arti", a: "Subjek, yang sedang dibicarakan", b: "Predikat, keterangan tentang mubtada'" },
+  { aspect: "Letak", a: "Di awal kalimat", b: "Setelah mubtada'" },
+  { aspect: "Syarat", a: "Isim ma'rifat (ال, nama orang, kata tunjuk)", b: "Isim nakirah (bertanwin), tanpa ال" },
+  { aspect: "Harakat akhir", a: "Marfu': dhammah (ـُ)", b: "Marfu': tanwin dhammah (ـٌ)" },
+  { aspect: "Kesesuaian jenis", a: "Mudzakkar atau muannats", b: "Mengikuti mubtada' (muannats berakhiran ة)" },
+  { aspect: "Contoh", a: "الْبَيْتُ (rumah itu)", b: "كَبِيرٌ (besar)" },
+];
+
+/* ============================================================
+   DAFTAR MATERI (halaman Kumpulan Materi)
+   ============================================================ */
+export type MateriId = "mubtada" | "isimfiil";
+export type MateriTheme = "green" | "blue" | "purple" | "mint";
+export type Materi = {
+  id: MateriId; no: string; theme: MateriTheme; img: string;
+  arabic: string; title: string; line: string; lineArabic?: boolean; // baris di bawah judul
+  adventure: string; mapSub: string; bubble: string; // teks pada peta
+  positions: MapPosition[]; slides: Record<number, Slide[]>;
+  summary: { title: string; head: [string, string]; rows: { aspect: string; a: string; b: string }[] };
+  help: { b: string; t: string }[]; // langkah 3-5 pada jendela Cara Bermain
+  sidekick: string; // keterangan tombol Ringkasan Materi
+};
+
+export const materiList: Materi[] = [
+  {
+    id: "mubtada", no: "01", theme: "green", img: "/images/materi/m-mubtada.jpg",
+    arabic: "مُبْتَدَأٌ وَخَبَرٌ", title: "Mubtada' dan Khabar", line: "الْجُمْلَةُ الاِسْمِيَّةُ", lineArabic: true,
+    adventure: "Petualangan Mubtada' dan Khabar", mapSub: "Mengenal jumlah ismiyah",
+    bubble: "Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar mubtada' dan khabar!",
+    positions: mubtadaPositions, slides: mubtadaSlides,
+    summary: { title: "Ringkasan Mubtada' dan Khabar", head: ["Mubtada'", "Khabar"], rows: mubtadaSummaryRows },
+    help: [
+      { b: "Pos 1 sampai 4: baca materi.", t: "Pelajari jumlah ismiyah, definisi, syarat, dan implikasi mubtada' dan khabar, lalu kerjakan soal evaluasi." },
+      { b: "Lihat kunci jawaban.", t: "Setiap pos menampilkan jawabanmu, jawaban yang benar, dan alasannya." },
+      { b: "Pos 5: tantang dirimu.", t: "Soal akhir yang lebih sulit dari pos-pos sebelumnya." },
+    ],
+    sidekick: "Mubtada' dan khabar yang sudah kamu pelajari",
+  },
+  {
+    id: "isimfiil", no: "02", theme: "blue", img: "/images/materi/m-isimfiil.jpg",
+    arabic: "إِسْمٌ وَفِعْلٌ", title: "Isim dan Fi'il", line: "Membedakan kata benda dan kata kerja.",
+    adventure: "Petualangan Isim dan Fi'il", mapSub: "Mengenal Isim dan Fi'il",
+    bubble: "Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi'il!",
+    positions: isimfiilPositions, slides: isimfiilSlides,
+    summary: { title: "Ringkasan Isim dan Fi'il", head: ["Isim", "Fi'il"], rows: tableRows.map((r) => ({ aspect: r.aspect, a: r.isim, b: r.fiil })) },
+    help: [
+      { b: "Pos 1 sampai 3: baca materi.", t: "Pelajari isim, fi'il, dan perbedaannya, lalu kerjakan soal evaluasi." },
+      { b: "Lihat kunci jawaban.", t: "Setiap pos menampilkan jawabanmu, jawaban yang benar, dan alasannya." },
+      { b: "Pos 4 dan 5: uji dirimu.", t: "Soal evaluasi menyeluruh, lalu soal akhir yang lebih sulit." },
+    ],
+    sidekick: "Ciri isim dan fi'il yang sudah kamu pelajari",
+  },
+];
+
+// Kartu pada halaman Kumpulan Materi yang belum tersedia (tampil sebagai "Segera Hadir").
+export const comingSoon = [
+  { no: "03", theme: "purple" as MateriTheme, img: "/images/materi/m-nat.jpg", arabic: "النَّعْتُ والْمَنْعُوتُ", title: "Na't dan Man'ut", line: "Mengenal kata sifat dan yang disifati." },
+  { no: "04", theme: "mint" as MateriTheme, img: "/images/materi/m-mudhaf.jpg", arabic: "المُضَافُ وَالمُضَافُ إِلَيْهِ", title: "Mudhaf dan Mudhaf Ilaih", line: "Mengenal hubungan kepemilikan." },
+];
+
+export const materiById = Object.fromEntries(materiList.map((m) => [m.id, m])) as Record<MateriId, Materi>;

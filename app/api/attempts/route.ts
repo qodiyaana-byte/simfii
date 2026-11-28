@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { bearer, verifyToken } from "@/lib/auth";
-import { questions, type Question } from "@/lib/questions";
+import { questionsOf, type MateriKey, type Question } from "@/lib/questions";
 
 type ValidatedAnswer = {
   question_id: string;
@@ -12,13 +12,16 @@ type ValidatedAnswer = {
 
 type SubmittedAnswer = { questionId?: string; answer?: string };
 
-// Menyimpan satu percobaan lengkap (30 soal). Skor dihitung ulang di server.
+// Menyimpan satu percobaan lengkap (30 soal dari satu materi). Skor dihitung ulang di server.
 export async function POST(request: Request) {
   try {
     const playerId = verifyToken(bearer(request));
     if (!playerId) return NextResponse.json({ error: "Sesi tidak valid. Silakan masuk kembali." }, { status: 401 });
 
     const body = await request.json();
+    // Tanpa field "materi" dianggap materi Isim dan Fi'il (kompatibel dengan versi lama).
+    const materi: MateriKey = body.materi === "mubtada" ? "mubtada" : "isimfiil";
+    const questions = questionsOf(materi);
     if (!Array.isArray(body.answers) || body.answers.length !== questions.length) {
       return NextResponse.json({ error: "Data jawaban belum lengkap. Selesaikan Pos 1 sampai 5 terlebih dahulu." }, { status: 400 });
     }

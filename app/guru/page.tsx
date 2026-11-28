@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Mixed } from "../mixed";
-import { questions } from "@/lib/questions";
+import { questionsOf, type MateriKey } from "@/lib/questions";
 import {
-  CATEGORY_LABELS, DEFAULT_KKM, POS_COLORS, POS_IDS, POS_NAMES, average, categoryTallies, formatDate, formatDateTime,
-  posOfQuestion, posTallies, questionById, score100, starsOf, type AnswerRow, type AttemptRow, type Tally,
+  CATEGORIES_OF, CATEGORY_LABELS, DEFAULT_KKM, MATERI_KEYS, MATERI_LABEL, POS_COLORS, POS_IDS, POS_NAMES_OF, average, categoryTallies, formatDate, formatDateTime,
+  materiOfAttempt, posOfQuestion, posTallies, questionById, score100, starsOf, type AnswerRow, type AttemptRow, type Tally,
 } from "@/lib/analytics";
 import { makeDemoReport, type ReportRow } from "@/lib/demo";
 
@@ -15,7 +15,6 @@ type Student = {
   pos: Record<number, Tally & { answered: number }>; cats: Record<string, Tally>;
 };
 const TOKEN_KEY = "simfii-guru-token";
-const CATS = Object.keys(CATEGORY_LABELS) as (keyof typeof CATEGORY_LABELS)[];
 
 function MiniStars({ score, size = 16 }: { score: number; size?: number }) {
   const filled = starsOf(score);
@@ -26,7 +25,9 @@ function MiniStars({ score, size = 16 }: { score: number; size?: number }) {
 const bar = (value: number | null, color: string) => <span className="td-bar"><i style={{ width: `${value ?? 0}%`, background: color }} /></span>;
 const toneOf = (v: number | null, kkm: number) => (v === null ? "none" : v >= kkm ? "good" : v >= kkm - 20 ? "mid" : "low");
 
-function buildStudents(rows: ReportRow[]): Student[] {
+function buildStudents(allRows: ReportRow[], materi: MateriKey): Student[] {
+  // satu percobaan berisi soal satu materi saja; tampilkan hanya materi yang dipilih
+  const rows = allRows.filter((row) => materiOfAttempt({ answers: row.attempt_answers || [] }) === materi);
   const map = new Map<string, { nickname: string; classCode: string; attempts: AttemptRow[] }>();
   for (const row of rows) {
     const p = Array.isArray(row.players) ? row.players[0] : row.players;
@@ -41,22 +42,22 @@ function buildStudents(rows: ReportRow[]): Student[] {
     return {
       key, nickname: e.nickname, classCode: e.classCode, attempts, latest,
       lastScore: score100(latest), bestScore: Math.max(...attempts.map(score100)),
-      pos: posTallies(latest.answers), cats: categoryTallies(latest.answers),
+      pos: posTallies(latest.answers, materi), cats: categoryTallies(latest.answers, materi),
     };
   }).sort((a, b) => a.nickname.localeCompare(b.nickname, "id"));
 }
 
-function downloadCsv(students: Student[], kkm: number) {
-  const head = ["Nama", "Kelas", "Percobaan", "Nilai Terakhir", "Nilai Terbaik", ...POS_IDS.map((p) => `Pos ${p} (%)`), "Bintang", "Status", "Terakhir Mengerjakan"];
+function downloadCsv(students: Student[], kkm: number, materi: MateriKey) {
+  const head = ["Materi", "Nama", "Kelas", "Percobaan", "Nilai Terakhir", "Nilai Terbaik", ...POS_IDS.map((p) => `Pos ${p} (%)`), "Bintang", "Status", "Terakhir Mengerjakan"];
   const lines = students.map((s) => [
-    s.nickname, s.classCode, s.attempts.length, s.lastScore, s.bestScore,
+    MATERI_LABEL[materi], s.nickname, s.classCode, s.attempts.length, s.lastScore, s.bestScore,
     ...POS_IDS.map((p) => s.pos[p].percent ?? ""), starsOf(s.lastScore), s.lastScore >= kkm ? "Tuntas" : "Remedial", formatDateTime(s.latest.created_at),
   ]);
   const csv = [head, ...lines].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `rekap-simfii-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  a.href = url; a.download = `rekap-simfii-${materi}-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -72,6 +73,7 @@ export default function TeacherDashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("ringkasan");
+  const [materi, setMateri] = useState<MateriKey>("isimfiil");
   const [kelas, setKelas] = useState("semua");
   const [query, setQuery] = useState("");
   const [kkm, setKkm] = useState(DEFAULT_KKM);
@@ -111,7 +113,9 @@ export default function TeacherDashboard() {
   const logout = () => { setRows(null); setToken(""); setDemo(false); setInput(""); try { sessionStorage.removeItem(TOKEN_KEY); } catch { /* abaikan */ } };
   const refresh = () => (demo ? setRows(makeDemoReport()) : void load(token));
 
-  const all = useMemo(() => (rows ? buildStudents(rows) : []), [rows]);
+  const posNames = POS_NAMES_OF[materi];
+  const CATS = CATEGORIES_OF[materi];
+  const all = useMemo(() => (rows ? buildStudents(rows, materi) : []), [rows, materi]);
   const classes = useMemo(() => Array.from(new Set(all.map((s) => s.classCode))).sort(), [all]);
   const students = useMemo(() => all.filter((s) => (kelas === "semua" || s.classCode === kelas) && s.nickname.toLowerCase().includes(query.trim().toLowerCase())), [all, kelas, query]);
 
@@ -121,7 +125,7 @@ export default function TeacherDashboard() {
     const catAvg = CATS.map((c) => average(students.map((s) => s.cats[c].percent).filter((v): v is number => v !== null)));
     const bins = [0, 0, 0, 0, 0];
     last.forEach((v) => { bins[Math.min(4, Math.floor(v / 20))]++; });
-    const q = questions.map((question) => {
+    const q = questionsOf(materi).map((question) => {
       const answered = students.map((s) => s.latest.answers.find((a) => a.question_id === question.id)).filter((a): a is AnswerRow => !!a);
       const correct = answered.filter((a) => a.correct).length;
       const wrongCount = new Map<string, number>();
@@ -136,7 +140,7 @@ export default function TeacherDashboard() {
       pass: last.length ? Math.round((last.filter((v) => v >= kkm).length / last.length) * 100) : null,
       posAvg, catAvg, bins, q,
     };
-  }, [students, kkm]);
+  }, [students, kkm, materi, CATS]);
 
   const remedial = useMemo(() => students.filter((s) => s.lastScore < kkm).sort((a, b) => a.lastScore - b.lastScore), [students, kkm]);
   const hardest = useMemo(() => [...stats.q].filter((x) => x.percent !== null).sort((a, b) => (a.percent ?? 0) - (b.percent ?? 0)), [stats.q]);
@@ -174,14 +178,15 @@ export default function TeacherDashboard() {
       <div className="td-bar-row">
         <div className="td-tabs">{([["ringkasan", "📊 Ringkasan"], ["siswa", "👩‍🎓 Daftar Murid"], ["soal", "❓ Analisis Soal"]] as [Tab, string][]).map(([k, label]) => <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{label}</button>)}</div>
         <div className="td-filters">
+          <select value={materi} onChange={(e) => { setMateri(e.target.value as MateriKey); setPosFilter(0); setDetail(null); }} aria-label="Pilih materi">{MATERI_KEYS.map((m) => <option key={m} value={m}>Materi: {MATERI_LABEL[m]}</option>)}</select>
           <select value={kelas} onChange={(e) => setKelas(e.target.value)} aria-label="Pilih kelas"><option value="semua">Semua kelas</option>{classes.map((c) => <option key={c} value={c}>{c}</option>)}</select>
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari nama murid..." aria-label="Cari murid" />
-          {tab === "siswa" && <button className="td-export" onClick={() => downloadCsv(students, kkm)} disabled={!students.length}>⬇ Unduh CSV</button>}
+          {tab === "siswa" && <button className="td-export" onClick={() => downloadCsv(students, kkm, materi)} disabled={!students.length}>⬇ Unduh CSV</button>}
         </div>
       </div>
 
       <div className="td-scroll">
-        {all.length === 0 && <div className="td-empty">Belum ada murid yang menyelesaikan Pos 1 sampai 5. Nilai akan muncul di sini setelah murid menyelesaikan petualangan.</div>}
+        {all.length === 0 && <div className="td-empty">Belum ada murid yang menyelesaikan Pos 1 sampai 5 pada materi {MATERI_LABEL[materi]}. Nilai akan muncul di sini setelah murid menyelesaikan petualangan.</div>}
 
         {all.length > 0 && tab === "ringkasan" && <>
           <div className="td-cards">
@@ -196,7 +201,7 @@ export default function TeacherDashboard() {
               <div className="td-cols">{stats.bins.map((n, i) => <div key={i} className="td-col"><span className="td-colv">{n}</span><i style={{ height: `${Math.max(4, (n / Math.max(1, ...stats.bins)) * 100)}%`, background: ["#ee5a8f", "#f08c00", "#ffc933", "#7bd88f", "#2eb96e"][i] }} /><small>{i * 20}{i === 4 ? "–100" : `–${i * 20 + 19}`}</small></div>)}</div>
             </section>
             <section className="td-panel"><h3>Rata-rata per Pos</h3>
-              {POS_IDS.map((p, i) => <div className="td-hrow" key={p}><span><i style={{ background: POS_COLORS[p] }} />{POS_NAMES[p]}</span>{bar(stats.posAvg[i], POS_COLORS[p])}<b>{stats.posAvg[i] ?? "-"}</b></div>)}
+              {POS_IDS.map((p, i) => <div className="td-hrow" key={p}><span><i style={{ background: POS_COLORS[p] }} />{posNames[p]}</span>{bar(stats.posAvg[i], POS_COLORS[p])}<b>{stats.posAvg[i] ?? "-"}</b></div>)}
             </section>
             <section className="td-panel"><h3>Kemampuan per Materi</h3>
               {CATS.map((c, i) => <div className="td-hrow" key={c}><span>{CATEGORY_LABELS[c]}</span>{bar(stats.catAvg[i], stats.catAvg[i] !== null && stats.catAvg[i]! < kkm ? "#ee5a8f" : "#2eb96e")}<b>{stats.catAvg[i] ?? "-"}</b></div>)}
@@ -216,7 +221,7 @@ export default function TeacherDashboard() {
         </>}
 
         {all.length > 0 && tab === "siswa" && <div className="td-tablewrap">
-          <table className="td-table"><thead><tr><th>Nama</th><th>Kelas</th><th>Coba</th><th>Terakhir</th><th>Terbaik</th>{POS_IDS.map((p) => <th key={p} title={POS_NAMES[p]} style={{ color: POS_COLORS[p] }}>Pos {p}</th>)}<th>Bintang</th><th>Status</th><th>Tanggal</th></tr></thead>
+          <table className="td-table"><thead><tr><th>Nama</th><th>Kelas</th><th>Coba</th><th>Terakhir</th><th>Terbaik</th>{POS_IDS.map((p) => <th key={p} title={posNames[p]} style={{ color: POS_COLORS[p] }}>Pos {p}</th>)}<th>Bintang</th><th>Status</th><th>Tanggal</th></tr></thead>
             <tbody>{students.map((s) => <tr key={s.key} onClick={() => { setDetail(s); setDetailAttempt(0); }}>
               <td className="nm">{s.nickname}</td><td>{s.classCode}</td><td>{s.attempts.length}</td><td><b className={`pill ${toneOf(s.lastScore, kkm)}`}>{s.lastScore}</b></td><td>{s.bestScore}</td>
               {POS_IDS.map((p) => <td key={p}><span className={`tone ${toneOf(s.pos[p].percent, kkm)}`}>{s.pos[p].percent ?? "-"}</span></td>)}
@@ -247,7 +252,7 @@ export default function TeacherDashboard() {
           <div className="td-mscore"><b className={`pill ${toneOf(score100(attemptData), kkm)}`}>{score100(attemptData)}</b><MiniStars score={score100(attemptData)} size={20} /><span>{attemptData.score}/{attemptData.total} benar · {formatDateTime(attemptData.created_at)}</span></div></div>
         {detail.attempts.length > 1 && <label className="td-attsel">Percobaan <select value={detailAttempt} onChange={(e) => setDetailAttempt(Number(e.target.value))}>{detail.attempts.map((a, i) => <option key={a.id} value={i}>{i === 0 ? "Terakhir · " : `#${detail.attempts.length - i} · `}{formatDateTime(a.created_at)} · nilai {score100(a)}</option>)}</select></label>}
       </div>
-      <div className="td-mpos">{POS_IDS.map((p) => { const t = posTallies(attemptData.answers)[p]; return <div key={p}><small style={{ color: POS_COLORS[p] }}>Pos {p}</small>{bar(t.percent, POS_COLORS[p])}<b>{t.percent ?? "-"}</b></div>; })}</div>
+      <div className="td-mpos">{POS_IDS.map((p) => { const t = posTallies(attemptData.answers, materi)[p]; return <div key={p}><small style={{ color: POS_COLORS[p] }}>Pos {p}</small>{bar(t.percent, POS_COLORS[p])}<b>{t.percent ?? "-"}</b></div>; })}</div>
       <div className="td-mlist">{[...attemptData.answers].sort((a, b) => a.question_id.localeCompare(b.question_id)).map((a) => { const q = questionById.get(a.question_id); if (!q) return null; return <div key={a.question_id} className={`td-ans ${a.correct ? "ok" : "no"}`}>
         <span className="no">{a.correct ? "✓" : "✗"}</span>
         <div><small>Pos {posOfQuestion(a.question_id)} · {a.question_id.toUpperCase()}</small><p><Mixed text={q.prompt} /></p>

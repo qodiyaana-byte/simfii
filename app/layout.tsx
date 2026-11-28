@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Simfii — Isim dan Fi'il",
-  description: "Petualangan interaktif bahasa Arab kelas VII untuk memahami isim dan fi'il melalui enam pos.",
+  title: "Simfii — Belajar Nahwu",
+  description: "Petualangan interaktif bahasa Arab kelas VII: Mubtada' dan Khabar, serta Isim dan Fi'il, masing-masing melalui enam pos.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

@@ -1,8 +1,27 @@
-# Simfii: Isim dan Fi'il
+# Simfii: Media Belajar Nahwu
 
-Media pembelajaran bahasa Arab kelas VII dengan enam pos petualangan yang fokus pada isim dan fi'il.
+Media pembelajaran bahasa Arab kelas VII. Setelah masuk, murid memilih materi di halaman **Kumpulan Materi**, lalu menjelajahi enam pos petualangan pada peta desa. Materi yang tersedia: **Mubtada' dan Khabar** (الْجُمْلَةُ الاِسْمِيَّةُ) dan **Isim dan Fi'il**.
 
-## Alur pos
+## Kumpulan Materi
+
+Halaman ini tampil setelah murid masuk (tombol "Kumpulan Materi" juga ada di peta, di bilah atas, dan di layar skor). Setiap kartu menampilkan nomor materi, judul Arab, judul Indonesia, progres pos, dan tombol Mulai/Lanjut Belajar. Kartu 03 dan 04 serta "Materi Selanjutnya" masih berstatus Segera Hadir. Daftar kartu ada di `materiList` dan `comingSoon` pada `lib/content.ts`. Untuk menambah materi baru: tambahkan posisi, slide, dan soal (id soal diawali satu huruf unik), lalu daftarkan di `materiList`.
+
+## Materi 01: Mubtada' dan Khabar
+
+Susunan pos sama persis dengan materi Isim dan Fi'il (peta, tata letak, evaluasi, dan skor sama).
+
+| Pos | Isi | Soal |
+| --- | --- | --- |
+| 1. Rumah Ismiyah | Jumlah ismiyah = mubtada' + khabar; mubtada' sebagai subjek dan khabar sebagai predikat; contoh | 5 |
+| 2. Rumah Definisi | Definisi mubtada'; definisi khabar; contoh | 5 |
+| 3. Balai Syarat | Syarat mubtada' (isim ma'rifat); syarat khabar; contoh | 7 |
+| 4. Kantor Implikasi | Mubtada' dan khabar marfu'; khabar sesuai jenis mubtada'; contoh | 6 |
+| 5. Taman Tantangan | Soal akhir, satu tingkat lebih sulit | 7 |
+| 6. Dermaga Bintang | Skor tiap pos, nilai akhir /100, dan bintang | - |
+
+Nilai tiap materi dihitung terpisah (30 soal per materi). Soal Mubtada' memakai id `m1-01` dst., soal Isim dan Fi'il memakai `p1-01` dst.
+
+## Materi 02: Isim dan Fi'il
 
 | Pos | Isi | Soal |
 | --- | --- | --- |
@@ -18,10 +37,12 @@ Setelah setiap evaluasi tampil kunci jawaban: jawaban siswa, jawaban yang benar,
 Nilai akhir = jawaban benar dari 30 soal dibagi 30 dikali 100. Setiap 20 poin mengisi satu bintang (5 bintang = 100).
 Teks soal dan alasan ada di `lib/questions.ts`; materi, peta konsep, dan tabel ada di `lib/content.ts`.
 
+Catatan: file `page.tsx`, `content.ts`, `questions.ts`, `globals.css`, dan sejenisnya yang berada di akar proyek adalah salinan lama dan tidak dipakai aplikasi. Yang dipakai ada di folder `app/` dan `lib/`.
+
 ## Dashboard
 
-- **Dashboard Murid** (di dalam aplikasi, tombol "📊 Dashboard Saya" di peta dan di layar skor): nilai terakhir dan terbaik, nilai per pos, kemampuan per materi, saran belajar, soal yang perlu diulang, perkembangan, dan riwayat percobaan.
-- **Dashboard Guru** (`/guru`, butuh token): ringkasan kelas, daftar murid dengan nilai per pos dan status tuntas/remedial (KKM bisa diubah), detail jawaban per murid, analisis soal tersulit beserta jawaban salah terbanyak, dan unduh rekap CSV. Tombol "Lihat contoh tampilan" menampilkan data contoh tanpa database.
+- **Dashboard Murid** (di dalam aplikasi, tombol "📊 Dashboard Saya" di peta dan di layar skor, serta "📊 Dashboard" di bilah atas; pilih materi lewat tombol di bagian atas): nilai terakhir dan terbaik, nilai per pos, kemampuan per materi, saran belajar, soal yang perlu diulang, perkembangan, dan riwayat percobaan.
+- **Dashboard Guru** (`/guru`, butuh token; pilih materi lewat menu "Materi"): ringkasan kelas, daftar murid dengan nilai per pos dan status tuntas/remedial (KKM bisa diubah), detail jawaban per murid, analisis soal tersulit beserta jawaban salah terbanyak, dan unduh rekap CSV. Tombol "Lihat contoh tampilan" menampilkan data contoh tanpa database.
 - Murid masuk dengan **nama panggilan + kode kelas + PIN 4 angka**. Pasangan yang sama akan membuka kembali riwayatnya. Tanpa database, aplikasi tetap berjalan dalam mode offline (nilai tidak tersimpan).
 
 ## Database (Supabase)

@@ -1,19 +1,21 @@
 "use client";
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-react";
-import { questions } from "@/lib/questions";
-import { mindmapBranches, positions, slides, tableRows, tagLabels, type Seg } from "@/lib/content";
+import { questionsOf } from "@/lib/questions";
+import { comingSoon, materiById, materiList, mindmapBranches, tableRows, tagLabels, type MateriId, type Seg } from "@/lib/content";
 import { Mixed } from "./mixed";
 import { StudentDashboard } from "./student-dashboard";
 import type { AnswerRow, AttemptRow } from "@/lib/analytics";
 import { type PinStatus } from "./scenery";
 import { MAP_H, MAP_W, pct, posLayout, type Box } from "@/lib/maplayout";
 
-type Screen = "home" | "identity" | "map" | "learn" | "quiz" | "review" | "result" | "dashboard";
+type Screen = "home" | "identity" | "materi" | "map" | "learn" | "quiz" | "review" | "result" | "dashboard";
 type Player = { id: string; nickname: string; classCode: string };
 
-const TOTAL_POS = positions.length;
+const TOTAL_POS = 6;
 const QUIZ_POS = 5;
+const MATERI_IDS = materiList.map((m) => m.id);
+const emptyBy = <T,>(v: T) => Object.fromEntries(MATERI_IDS.map((id) => [id, v])) as Record<MateriId, T>;
 const ZOOM_MS = 950;
 const mapOrigin = (x: number) => x;
 const boxStyle = (b: Box): CSSProperties => ({ left: `${pct.left(b)}%`, top: `${pct.top(b)}%`, width: `${pct.width(b)}%`, height: `${pct.height(b)}%` });
@@ -43,9 +45,11 @@ export default function Page() {
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [completed, setCompleted] = useState<number[]>([]);
+  const [materiId, setMateriId] = useState<MateriId>("isimfiil");
+  const [completedBy, setCompletedBy] = useState<Record<MateriId, number[]>>(() => emptyBy<number[]>([]));
+  const [dashFrom, setDashFrom] = useState<"map" | "materi">("map");
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [savedBy, setSavedBy] = useState<Record<MateriId, boolean>>(() => emptyBy(false));
   const [token, setToken] = useState<string | null>(null);
   const [history, setHistory] = useState<AttemptRow[]>([]);
   const [online, setOnline] = useState(false);
@@ -58,19 +62,29 @@ export default function Page() {
   const [showSummary, setShowSummary] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
 
-  const posQuestions = useMemo(() => questions.filter((item) => item.position === position), [position]);
+  const M = materiById[materiId];
+  const positions = M.positions;
+  const slides = M.slides;
+  const questions = useMemo(() => questionsOf(materiId), [materiId]);
+  const completed = completedBy[materiId];
+  const saved = savedBy[materiId];
+  const setCompleted = (fn: (list: number[]) => number[]) => setCompletedBy((prev) => ({ ...prev, [materiId]: fn(prev[materiId]) }));
+  const setSaved = (v: boolean) => setSavedBy((prev) => ({ ...prev, [materiId]: v }));
+  const posQuestions = useMemo(() => questions.filter((item) => item.position === position), [questions, position]);
   const currentQuestion = posQuestions[qIndex];
   const posSlides = slides[position] || [];
   const slide = posSlides[slideIndex];
   const accent = positions[Math.min(position, TOTAL_POS) - 1].color;
 
-  const sessionAnswers: AnswerRow[] = questions
-    .filter((q) => completed.includes(q.position) && answers[q.id] !== undefined)
+  // Jawaban sesi ini untuk semua materi (dashboard memilahnya per materi).
+  const sessionRowsOf = (m: MateriId): AnswerRow[] => questionsOf(m)
+    .filter((q) => completedBy[m].includes(q.position) && answers[q.id] !== undefined)
     .map((q) => ({ question_id: q.id, category: q.category, answer: answers[q.id] ?? "", correct: answers[q.id] === q.answer }));
-  const sessionComplete = [1, 2, 3, 4, 5].every((id) => completed.includes(id));
-  const attemptsAll: AttemptRow[] = sessionComplete && !saved
-    ? [{ id: "sesi-ini", score: sessionAnswers.filter((a) => a.correct).length, total: questions.length, created_at: new Date().toISOString(), answers: sessionAnswers }, ...history]
-    : history;
+  const sessionAnswers: AnswerRow[] = MATERI_IDS.flatMap(sessionRowsOf);
+  const sessionAttempts: AttemptRow[] = MATERI_IDS
+    .filter((m) => [1, 2, 3, 4, 5].every((id) => completedBy[m].includes(id)) && !savedBy[m])
+    .map((m) => { const rows = sessionRowsOf(m); return { id: `sesi-${m}`, score: rows.filter((a) => a.correct).length, total: questionsOf(m).length, created_at: new Date().toISOString(), answers: rows }; });
+  const attemptsAll: AttemptRow[] = [...sessionAttempts, ...history];
 
   // Setiap pindah halaman, slide materi, atau soal: langsung tampil dari bagian paling atas.
   useEffect(() => {
@@ -111,7 +125,7 @@ export default function Page() {
 
   const goOffline = (nama: string, kelas: string) => {
     setPlayer({ id: crypto.randomUUID(), nickname: nama, classCode: kelas });
-    setToken(null); setHistory([]); setOnline(false); setScreen("map");
+    setToken(null); setHistory([]); setOnline(false); setScreen("materi");
   };
 
   // Masuk dengan nama + kelas + PIN. Jika basis data belum tersedia, permainan tetap berjalan secara offline.
@@ -125,7 +139,7 @@ export default function Page() {
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.player) {
         setPlayer({ id: data.player.id, nickname: data.player.nickname, classCode: data.player.classCode });
-        setToken(data.token ?? null); setHistory(data.attempts ?? []); setOnline(true); setScreen("map");
+        setToken(data.token ?? null); setHistory(data.attempts ?? []); setOnline(true); setScreen("materi");
       } else if (res.status === 400 || res.status === 401) {
         setLoginError(data.error || "Nama, kelas, atau PIN belum sesuai.");
       } else goOffline(nama, kelas);
@@ -149,7 +163,7 @@ export default function Page() {
     try {
       const response = await fetch("/api/attempts", {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ answers: questions.map((item) => ({ questionId: item.id, answer: record[item.id] ?? "" })) }),
+        body: JSON.stringify({ materi: materiId, answers: questions.map((item) => ({ questionId: item.id, answer: record[item.id] ?? "" })) }),
       });
       setSaved(response.ok);
       if (response.ok) await refreshHistory(token);
@@ -157,7 +171,8 @@ export default function Page() {
     finally { setSaving(false); }
   };
 
-  const openDashboard = () => { setScreen("dashboard"); void refreshHistory(); };
+  const openDashboard = (from: "map" | "materi" = "map") => { setDashFrom(from); setScreen("dashboard"); void refreshHistory(); };
+  const chooseMateri = (id: MateriId) => { setMateriId(id); setPosition(1); setSlideIndex(0); setQIndex(0); setSelected(""); setScreen("map"); };
   const openMateri = (pos: number) => {
     setPosition(pos); setSlideIndex(0); setQIndex(0); setSelected("");
     setScreen(slides[pos] ? "learn" : "map");
@@ -190,12 +205,14 @@ export default function Page() {
   };
 
   const resetAdventure = () => {
-    setPosition(1); setSlideIndex(0); setQIndex(0); setSelected(""); setAnswers({});
-    setCompleted([]); setSaved(false); setScreen("map");
+    const mine = new Set(questions.map((item) => item.id));
+    setPosition(1); setSlideIndex(0); setQIndex(0); setSelected("");
+    setAnswers((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !mine.has(id))));
+    setCompleted(() => []); setSaved(false); setScreen("map");
   };
 
   const predicate = finalScore >= 90 ? "Detektif Super! 🏅" : finalScore >= 75 ? "Detektif Hebat! 🎉" : finalScore >= 60 ? "Detektif Handal 👍" : "Detektif Pemula, Ayo Berlatih Lagi! 💪";
-  const goHome = () => setScreen(player ? "map" : "home");
+  const goHome = () => setScreen(player ? "materi" : "home");
   const posCheer = (p: number) => p >= 90 ? "Luar biasa! Kamu menguasai materi ini. 🌟" : p >= 70 ? "Hebat! Sedikit lagi sempurna. 🎉" : p >= 50 ? "Lumayan! Baca alasannya, lalu coba lagi nanti. 💡" : "Tidak apa-apa. Pelajari kunci jawabannya dan kamu pasti bisa! 💪";
   const stageStyle = zoom ? ({ transformOrigin: `${zoom.x}% ${zoom.y}%` } as CSSProperties) : undefined;
 
@@ -203,7 +220,7 @@ export default function Page() {
   const topbar = (
     <header className="topbar">
       <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
-      <nav><button onClick={goHome}>{player ? "Peta" : "Beranda"}</button>{player && <button onClick={openDashboard}>📊 Dashboard</button>}<a href="/guru">Ruang Guru</a></nav>
+      <nav><button className={screen === "materi" ? "on" : ""} onClick={goHome}>{player ? "📚 Kumpulan Materi" : "Beranda"}</button>{player && <button onClick={() => openDashboard("materi")}>📊 Dashboard</button>}<a href="/guru">Ruang Guru</a></nav>
     </header>
   );
   const body = (
@@ -228,15 +245,57 @@ export default function Page() {
       <button className="text-button" onClick={() => setScreen("home")}><ArrowLeft size={16} /> Kembali</button>
     </section>}
 
+    {screen === "materi" && <section className="mk">
+      <div className="mk-hero">
+        <div className="mk-hero-board"><span className="mk-chip">🕵️ Halo, {player?.nickname || "Detektif"}!</span><h1>Kumpulan Materi</h1><p>Yuk, pelajari rahasia susunan kalimat bahasa Arab!</p><i className="mk-underline" aria-hidden="true" /></div>
+        <img className="mk-hero-img" src="/images/materi/hero-books.jpg" alt="" draggable={false} />
+      </div>
+      <div className="mk-label"><span>📖</span> Materi Pembelajaran</div>
+      <div className="mk-grid">
+        {materiList.map((m) => {
+          const done = completedBy[m.id].length;
+          return <article key={m.id} className={`mk-card ${m.theme} span6`}>
+            <div className="mk-text">
+              <span className="mk-badge">Materi {m.no}</span>
+              <span className="ar mk-ar" dir="rtl">{m.arabic}</span>
+              <h3>{m.title}</h3>
+              {m.lineArabic ? <span className="ar mk-line-ar" dir="rtl">{m.line}</span> : <p className="mk-line">{m.line}</p>}
+              <div className="mk-progress" aria-label={`${done} dari ${TOTAL_POS} pos selesai`}><div className="bar"><i style={{ width: `${Math.round((done / TOTAL_POS) * 100)}%` }} /></div><small>{done}/{TOTAL_POS} pos</small></div>
+              <button className="mk-btn" onClick={() => chooseMateri(m.id)}>{done > 0 ? "Lanjut Belajar" : "Mulai Belajar"} <ArrowRight size={16} /></button>
+            </div>
+            <img className="mk-img" src={m.img} alt="" draggable={false} />
+          </article>;
+        })}
+        {comingSoon.map((m) => <article key={m.no} className={`mk-card ${m.theme} span4 soon`} aria-disabled="true">
+          <div className="mk-text">
+            <span className="mk-badge">Materi {m.no}</span>
+            <span className="ar mk-ar" dir="rtl">{m.arabic}</span>
+            <h3>{m.title}</h3>
+            <p className="mk-line">{m.line}</p>
+            <button className="mk-btn" disabled><LockKeyhole size={15} /> Segera Hadir</button>
+          </div>
+          <img className="mk-img" src={m.img} alt="" draggable={false} />
+        </article>)}
+        <article className="mk-card locked span4">
+          <div className="mk-lock"><LockKeyhole size={34} /></div>
+          <h3>Materi Selanjutnya</h3>
+          <p className="mk-line">Materi baru akan hadir setelah kamu menyelesaikan misi pembelajaran.</p>
+          <span className="mk-mosque" aria-hidden="true">🕌</span>
+        </article>
+      </div>
+      <div className="mk-banner"><span>🏆</span><b>Terus belajar dan selesaikan misimu, Detektif!</b><span>⭐</span></div>
+    </section>}
+
     {screen === "map" && <section className="map-screen">
       <div className={`map-frame ${zoom ? "zooming" : ""}`} ref={mapRef}>
         <div className="map-board photo" style={stageStyle}>
           <img className="map-photo" src="/images/peta-desa.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
           <div className="map-overlay">
-            <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>Petualangan Isim dan Fi&apos;il</b><small>Mengenal Isim dan Fi&apos;il</small></div></div>
-            <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! Ayo jelajahi rumah-rumah dan selesaikan misi untuk belajar isim dan fi&apos;il!</p></div>
+            <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>{M.adventure}</b><small>{M.mapSub}</small></div></div>
+            <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! {M.bubble}</p></div>
             <div className="mp mp-ui mp-progress" style={ui(1062, 36, 386, 90)}><span className="mp-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
-            <button className="mp mp-ui mp-dash" style={ui(1062, 134, 386, 56)} onClick={openDashboard}>📊 Dashboard Saya</button>
+            <button className="mp mp-ui mp-dash" style={ui(1062, 134, 386, 56)} onClick={() => openDashboard("map")}>📊 Dashboard Saya</button>
+            <button className="mp mp-ui mp-dash mp-back" style={ui(1062, 198, 386, 56)} onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button>
             <button className="mp mp-ui mp-gear" style={ui(1450, 44, 76, 76)} onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button>
             {positions.map((item) => {
               const L = posLayout[item.id];
@@ -254,7 +313,7 @@ export default function Page() {
                 </button>
               </Fragment>;
             })}
-            <button className="mp mp-ui mp-book" style={ui(18, 842, 388, 128)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>Ciri isim dan fi&apos;il yang sudah kamu pelajari</small></div><i>→</i></button>
+            <button className="mp mp-ui mp-book" style={ui(18, 842, 388, 128)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>{M.sidekick}</small></div><i>→</i></button>
             <button className="mp mp-ui mp-sign" style={ui(1268, 736, 214, 128)} onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}><span>{nextPosition ? "Jalur Menuju Misi Berikutnya" : "Lihat Skor Akhir"}</span><ArrowRight size={22} /></button>
             <div className="mp mp-ui mp-chest" style={ui(1300, 878, 232, 100)}><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
           </div>
@@ -289,6 +348,20 @@ export default function Page() {
             <div className="wg-head"><b>{g.title}</b>{g.note && <small>{g.note}</small>}</div>
             <div className="word-grid">{g.words.map((w) => <div className="word-card" key={w.arabic}><span className="ar word-ar" dir="rtl">{w.arabic}</span><span className="word-id">{w.meaning}</span></div>)}</div>
           </div>)}
+        </div>}
+        {slide.kind === "parts" && <div>
+          <p className="slide-intro">{slide.intro}</p>
+          {slide.showRoles && <div className="legend"><span><i className="dot mub" /> Biru = mubtada&apos; (subjek)</span><span><i className="dot khb" /> Merah muda = khabar (predikat)</span></div>}
+          <div className="parts-grid">{slide.items.map((it) => <div className="part-card" key={it.mubtada.ar + it.khabar.ar}>
+            <div className="part-sentence" dir="rtl"><span className="ar pt mub">{it.mubtada.ar}</span><span className="ar pt khb">{it.khabar.ar}</span></div>
+            <div className="part-roles">
+              <div className="pr mub"><small>Mubtada&apos; · subjek</small><span className="ar" dir="rtl">{it.mubtada.ar}</span><em>{it.mubtada.id}</em></div>
+              <div className="pr khb"><small>Khabar · predikat</small><span className="ar" dir="rtl">{it.khabar.ar}</span><em>{it.khabar.id}</em></div>
+            </div>
+            <div className="part-meaning">{it.meaning}</div>
+            {it.note && <div className="part-note">💡 <span><Mixed text={it.note} /></span></div>}
+          </div>)}</div>
+          {slide.tip && <div className="part-tip"><b>💡 Kunci mengingat:</b> {slide.tip}</div>}
         </div>}
         {slide.kind === "mindmap" && <div className="cm">
           <div className="cm-root"><span className="ar" dir="rtl">كَلِمَةٌ</span><small>Kata dalam bahasa Arab</small></div>
@@ -351,11 +424,11 @@ export default function Page() {
       <div className="hero-actions centered"><button className="primary" onClick={() => setScreen("map")}>{position === QUIZ_POS ? "Kembali ke Peta, Buka Aula Bintang" : "Kembali ke Peta"} <ArrowRight size={18} /></button></div>
     </section>; })()}
 
-    {screen === "dashboard" && player && <StudentDashboard player={player} attempts={attemptsAll} partial={sessionAnswers} online={online} loading={dashLoading} onBack={() => setScreen("map")} onReplay={resetAdventure} onMateri={openMateri} />}
+    {screen === "dashboard" && player && <StudentDashboard player={player} attempts={attemptsAll} partial={sessionAnswers} online={online} loading={dashLoading} materi={materiId} onSwitch={setMateriId} backLabel={dashFrom === "materi" ? "Kembali ke Kumpulan Materi" : "Kembali ke peta"} onBack={() => setScreen(dashFrom)} onReplay={resetAdventure} onMateri={openMateri} />}
 
     {screen === "result" && <section className="result-panel">
       {finalScore >= 60 && <div className="confetti" aria-hidden="true">{Array.from({ length: 24 }).map((_, i) => <i key={i} style={{ "--i": i } as CSSProperties} />)}</div>}
-      <span className="eyebrow accent">POS 6 · AULA BINTANG</span>
+      <span className="eyebrow accent">{M.title.toUpperCase()} · POS 6 · AULA BINTANG</span>
       <h2>Hebat, {player?.nickname || "Detektif"}!</h2>
       <Stars value={finalScore} />
       <div className="big-score">{finalScore}<small>/100</small></div>
@@ -364,7 +437,7 @@ export default function Page() {
       <div className="score-grid">{positions.slice(0, QUIZ_POS).map((item) => { const s = scoreOf(item.id); const done = completed.includes(item.id); return <div className="score-card" key={item.id} style={{ "--pin": item.color } as CSSProperties}><span>{item.icon}</span><small>POS {item.id}</small><b>{done ? `${s.correct}/${s.total}` : "-"}</b><em>{done ? `Nilai ${s.percent}` : "Belum dikerjakan"}</em></div>; })}</div>
       <div className="result-summary"><div><span>Jawaban benar</span><b>{totalCorrect} dari {questions.length}</b></div><div><span>Soal sudah dikerjakan</span><b>{totalAnswered} dari {questions.length}</b></div><div><span>Nilai akhir</span><b>{finalScore} / 100</b></div></div>
       <div className="save-status">{saving ? "Menyimpan hasil petualangan..." : saved ? "✓ Hasil berhasil disimpan." : "Nilai tampil di perangkat ini. Penyimpanan server belum berhasil atau belum dikonfigurasi."}</div>
-      <div className="hero-actions centered"><button className="primary" onClick={openDashboard}>📊 Dashboard Saya</button><button className="secondary" onClick={() => setScreen("map")}>Lihat Peta Desa</button><button className="secondary" onClick={resetAdventure}><RotateCcw size={16} /> Ulangi Petualangan</button></div>
+      <div className="hero-actions centered"><button className="primary" onClick={() => openDashboard("map")}>📊 Dashboard Saya</button><button className="secondary" onClick={() => setScreen("map")}>Lihat Peta Desa</button><button className="secondary" onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button><button className="secondary" onClick={resetAdventure}><RotateCcw size={16} /> Ulangi Petualangan</button></div>
     </section>}
     </div>
   );
@@ -374,20 +447,18 @@ export default function Page() {
       <button className="modal-x" onClick={() => setShowHelp(false)} aria-label="Tutup"><X size={18} /></button>
       <h2>📖 Cara Bermain</h2>
       <ol className="howto">
-        <li><b>Isi nama detektif.</b> Tulis nama panggilan dan kode kelas, lalu masuk ke desa.</li>
-        <li><b>Kunjungi rumah bernomor.</b> Klik bangunan di peta. Pos dibuka berurutan dari 1 sampai 6.</li>
-        <li><b>Pos 1 sampai 3: baca materi.</b> Pelajari isim, fi&apos;il, dan perbedaannya, lalu kerjakan soal evaluasi.</li>
-        <li><b>Lihat kunci jawaban.</b> Setiap pos menampilkan jawabanmu, jawaban yang benar, dan alasannya.</li>
-        <li><b>Pos 4 dan 5: uji dirimu.</b> Soal evaluasi menyeluruh, lalu soal akhir yang lebih sulit.</li>
+        <li><b>Isi nama detektif.</b> Tulis nama panggilan dan kode kelas, lalu masuk ke Kumpulan Materi.</li>
+        <li><b>Pilih materi, lalu kunjungi rumah bernomor.</b> Klik bangunan di peta. Pos dibuka berurutan dari 1 sampai 6.</li>
+        {M.help.map((h) => <li key={h.b}><b>{h.b}</b> {h.t}</li>)}
         <li><b>Pos 6: kumpulkan bintang.</b> Lihat skor tiap pos dan nilai akhir dari 100.</li>
       </ol>
       <button className="primary full" onClick={() => setShowHelp(false)}>Siap, Ayo Mulai!</button>
     </div></div>}
     {showSummary && <div className="modal-back" onClick={() => setShowSummary(false)}><div className="modal wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Ringkasan materi">
       <button className="modal-x" onClick={() => setShowSummary(false)} aria-label="Tutup"><X size={18} /></button>
-      <h2>📖 Ringkasan Materi</h2>
-      <div className="table-scroll"><table className="diff-table"><thead><tr><th>Aspek</th><th className="isim">Isim</th><th className="fiil">Fi&apos;il</th></tr></thead>
-        <tbody>{tableRows.map((row) => <tr key={row.aspect}><th><Mixed text={row.aspect} /></th><td><Mixed text={row.isim} /></td><td><Mixed text={row.fiil} /></td></tr>)}</tbody></table></div>
+      <h2>📖 {M.summary.title}</h2>
+      <div className="table-scroll"><table className="diff-table"><thead><tr><th>Aspek</th><th className="isim">{M.summary.head[0]}</th><th className="fiil">{M.summary.head[1]}</th></tr></thead>
+        <tbody>{M.summary.rows.map((row) => <tr key={row.aspect}><th><Mixed text={row.aspect} /></th><td><Mixed text={row.a} /></td><td><Mixed text={row.b} /></td></tr>)}</tbody></table></div>
     </div></div>}
     </>
   );
