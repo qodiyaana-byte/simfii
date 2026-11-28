@@ -2,12 +2,12 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole, RotateCcw, X } from "lucide-react";
 import { questionsOf } from "@/lib/questions";
-import { comingSoon, materiById, materiList, mindmapBranches, tableRows, tagLabels, type MateriId, type Seg } from "@/lib/content";
+import { materiById, materiList, mindmapBranches, tableRows, tagLabels, type MateriId, type Seg } from "@/lib/content";
 import { Mixed } from "./mixed";
 import { StudentDashboard } from "./student-dashboard";
 import type { AnswerRow, AttemptRow } from "@/lib/analytics";
 import { type PinStatus } from "./scenery";
-import { MAP_H, MAP_W, pct, posLayout, type Box } from "@/lib/maplayout";
+import { HUB, mapLayouts, pctBox, pctRect, type Rect } from "@/lib/maplayout";
 
 type Screen = "home" | "identity" | "materi" | "map" | "learn" | "quiz" | "review" | "result" | "dashboard";
 type Player = { id: string; nickname: string; classCode: string };
@@ -17,10 +17,6 @@ const QUIZ_POS = 5;
 const MATERI_IDS = materiList.map((m) => m.id);
 const emptyBy = <T,>(v: T) => Object.fromEntries(MATERI_IDS.map((id) => [id, v])) as Record<MateriId, T>;
 const ZOOM_MS = 950;
-const mapOrigin = (x: number) => x;
-const boxStyle = (b: Box): CSSProperties => ({ left: `${pct.left(b)}%`, top: `${pct.top(b)}%`, width: `${pct.width(b)}%`, height: `${pct.height(b)}%` });
-const ui = (l: number, t: number, w: number, h: number): CSSProperties => ({ left: `${(l / MAP_W) * 100}%`, top: `${(t / MAP_H) * 100}%`, width: `${(w / MAP_W) * 100}%`, height: `${(h / MAP_H) * 100}%` });
-
 function Stars({ value, size = 56 }: { value: number; size?: number }) {
   const filled = Math.max(0, Math.min(5, (value / 100) * 5));
   return <div className="stars" role="img" aria-label={`${Math.round(filled * 10) / 10} dari 5 bintang`} style={{ fontSize: size }}>
@@ -189,8 +185,9 @@ export default function Page() {
     else setScreen("quiz");
   };
   const enterPosition = (id: number) => {
-    const target = positions[id - 1];
-    if (isUnlocked(id)) zoomThen(mapOrigin(target.x), target.y, () => openPosition(id));
+    const L = mapLayouts[materiId];
+    const c = L.pos[id].hit;
+    if (isUnlocked(id)) zoomThen((c.cx / L.w) * 100, (c.cy / L.h) * 100, () => openPosition(id));
   };
 
   const submitAnswer = () => {
@@ -216,7 +213,7 @@ export default function Page() {
   const posCheer = (p: number) => p >= 90 ? "Luar biasa! Kamu menguasai materi ini. 🌟" : p >= 70 ? "Hebat! Sedikit lagi sempurna. 🎉" : p >= 50 ? "Lumayan! Baca alasannya, lalu coba lagi nanti. 💡" : "Tidak apa-apa. Pelajari kunci jawabannya dan kamu pasti bisa! 💪";
   const stageStyle = zoom ? ({ transformOrigin: `${zoom.x}% ${zoom.y}%` } as CSSProperties) : undefined;
 
-  const imageScreen = screen === "home" || screen === "map";
+  const imageScreen = screen === "home" || screen === "map" || screen === "materi";
   const topbar = (
     <header className="topbar">
       <button className="brand" onClick={goHome}><span className="brand-mark">🕵️</span><span><b>Simfii</b><small>اِسْمٌ وَفِعْلٌ</small></span></button>
@@ -227,7 +224,7 @@ export default function Page() {
     <div key={screen} className={`screen-enter screen-${screen}`}>
     {screen === "home" && <><section className={`home-stage ${zoom ? "zooming" : ""}`}>
       <div className="home-scene" style={stageStyle}><img className="home-img" src="/images/halaman-awal.jpg" alt="Simfii: ayo jelajahi dunia Bahasa Arab dan pahami perbedaan antara isim dan fi'il" draggable={false} /></div>
-      <button className="hs hs-start" aria-label="Mulai Petualangan" onClick={() => zoomThen(70, 72, () => setScreen("identity"))} />
+      <button className="hs hs-start" aria-label="Mulai Petualangan" onClick={() => zoomThen(70, 72, () => setScreen(player ? "materi" : "identity"))} />
       <button className="hs hs-q" aria-label="Cara Bermain" onClick={() => setShowHelp(true)}>?</button>
       <button className="hs hs-help" onClick={() => setShowHelp(true)}><span className="hh-icon">📖</span><b>Cara Bermain</b><i>→</i></button>
       <a className="hs hs-guru" href="/guru">Ruang Guru</a>
@@ -245,81 +242,79 @@ export default function Page() {
       <button className="text-button" onClick={() => setScreen("home")}><ArrowLeft size={16} /> Kembali</button>
     </section>}
 
-    {screen === "materi" && <section className="mk">
-      <div className="mk-hero">
-        <div className="mk-hero-board"><span className="mk-chip">🕵️ Halo, {player?.nickname || "Detektif"}!</span><h1>Kumpulan Materi</h1><p>Yuk, pelajari rahasia susunan kalimat bahasa Arab!</p><i className="mk-underline" aria-hidden="true" /></div>
-        <img className="mk-hero-img" src="/images/materi/hero-books.jpg" alt="" draggable={false} />
-      </div>
-      <div className="mk-label"><span>📖</span> Materi Pembelajaran</div>
-      <div className="mk-grid">
-        {materiList.map((m) => {
-          const done = completedBy[m.id].length;
-          return <article key={m.id} className={`mk-card ${m.theme} span6`}>
-            <div className="mk-text">
-              <span className="mk-badge">Materi {m.no}</span>
-              <span className="ar mk-ar" dir="rtl">{m.arabic}</span>
-              <h3>{m.title}</h3>
-              {m.lineArabic ? <span className="ar mk-line-ar" dir="rtl">{m.line}</span> : <p className="mk-line">{m.line}</p>}
-              <div className="mk-progress" aria-label={`${done} dari ${TOTAL_POS} pos selesai`}><div className="bar"><i style={{ width: `${Math.round((done / TOTAL_POS) * 100)}%` }} /></div><small>{done}/{TOTAL_POS} pos</small></div>
-              <button className="mk-btn" onClick={() => chooseMateri(m.id)}>{done > 0 ? "Lanjut Belajar" : "Mulai Belajar"} <ArrowRight size={16} /></button>
-            </div>
-            <img className="mk-img" src={m.img} alt="" draggable={false} />
-          </article>;
-        })}
-        {comingSoon.map((m) => <article key={m.no} className={`mk-card ${m.theme} span4 soon`} aria-disabled="true">
-          <div className="mk-text">
-            <span className="mk-badge">Materi {m.no}</span>
-            <span className="ar mk-ar" dir="rtl">{m.arabic}</span>
-            <h3>{m.title}</h3>
-            <p className="mk-line">{m.line}</p>
-            <button className="mk-btn" disabled><LockKeyhole size={15} /> Segera Hadir</button>
-          </div>
-          <img className="mk-img" src={m.img} alt="" draggable={false} />
-        </article>)}
-        <article className="mk-card locked span4">
-          <div className="mk-lock"><LockKeyhole size={34} /></div>
-          <h3>Materi Selanjutnya</h3>
-          <p className="mk-line">Materi baru akan hadir setelah kamu menyelesaikan misi pembelajaran.</p>
-          <span className="mk-mosque" aria-hidden="true">🕌</span>
-        </article>
-      </div>
-      <div className="mk-banner"><span>🏆</span><b>Terus belajar dan selesaikan misimu, Detektif!</b><span>⭐</span></div>
-    </section>}
-
-    {screen === "map" && <section className="map-screen">
-      <div className={`map-frame ${zoom ? "zooming" : ""}`} ref={mapRef}>
-        <div className="map-board photo" style={stageStyle}>
-          <img className="map-photo" src="/images/peta-desa.jpg" alt="Peta desa petualangan Simfii" draggable={false} />
+    {screen === "materi" && (() => {
+      const ui = (r: Rect) => pctRect(r, HUB.w, HUB.h);
+      const navTo = {
+        home: () => setScreen("home"), materi: () => setScreen("materi"),
+        peta: () => setScreen("map"), profil: () => openDashboard("materi"),
+      };
+      const labels = { home: "Beranda", materi: "Materi", peta: "Peta Misi", profil: "Profil" } as const;
+      return <section className="hub-screen">
+        <div className="hub-board" style={{ "--k": 1536 / HUB.w } as CSSProperties}>
+          <img className="hub-img" src={HUB.img} alt="Kumpulan Materi: Isim dan Fi'il, serta Mubtada' dan Khabar" draggable={false} />
           <div className="map-overlay">
-            <div className="mp mp-ui mp-title" style={ui(16, 20, 512, 172)}><span className="mt-icon">🏠</span><div><b>{M.adventure}</b><small>{M.mapSub}</small></div></div>
-            <div className="mp mp-ui mp-bubble" style={ui(526, 28, 482, 144)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! {M.bubble}</p></div>
-            <div className="mp mp-ui mp-progress" style={ui(1062, 36, 386, 90)}><span className="mp-star">★</span><div><b>Progres Belajar</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em></div>
-            <button className="mp mp-ui mp-dash" style={ui(1062, 134, 386, 56)} onClick={() => openDashboard("map")}>📊 Dashboard Saya</button>
-            <button className="mp mp-ui mp-dash mp-back" style={ui(1062, 198, 386, 56)} onClick={() => setScreen("materi")}>📚 Kumpulan Materi</button>
-            <button className="mp mp-ui mp-gear" style={ui(1450, 44, 76, 76)} onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button>
+            {(["home", "materi", "peta", "profil"] as const).flatMap((k) => [
+              <button key={`t-${k}`} className="mp nav-hit" style={ui(HUB.nav.top[k])} aria-label={labels[k]} onClick={navTo[k]} />,
+              <button key={`b-${k}`} className="mp nav-hit" style={ui(HUB.nav.bottom[k])} aria-label={labels[k]} onClick={navTo[k]} />,
+            ])}
+            {materiList.map((m) => {
+              const c = HUB.cards[m.id];
+              const done = completedBy[m.id].length;
+              return <Fragment key={m.id}>
+                <button className="mp nav-hit hub-card" style={ui(c.card)} aria-label={`Mulai belajar ${m.title}`} onClick={() => chooseMateri(m.id)} />
+                <div className="mp hub-progress" style={ui(c.progress)} aria-label={`${done} dari ${TOTAL_POS} pos selesai`}><div className="bar"><i style={{ width: `${Math.round((done / TOTAL_POS) * 100)}%` }} /></div><small>{done}/{TOTAL_POS} pos</small></div>
+              </Fragment>;
+            })}
+            <div className="mp hub-line" style={ui(HUB.mubtadaLine)}><span className="ar" dir="rtl">الْجُمْلَةُ الاِسْمِيَّةُ</span></div>
+          </div>
+        </div>
+        <a className="hub-guru" href="/guru">Ruang Guru</a>
+      </section>;
+    })()}
+
+    {screen === "map" && (() => {
+      const L = mapLayouts[materiId];
+      const ui = (r: Rect) => pctRect(r, L.w, L.h);
+      const goNext = () => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"));
+      const navTo = { home: () => setScreen("home"), materi: () => setScreen("materi"), peta: goNext, profil: () => openDashboard("map") };
+      const labels = { home: "Beranda", materi: "Materi", peta: "Peta Misi", profil: "Profil" } as const;
+      return <section className="map-screen">
+      <div className={`map-frame portrait ${zoom ? "zooming" : ""}`} ref={mapRef}>
+        <div className="map-board photo portrait" style={{ ...stageStyle, aspectRatio: `${L.w} / ${L.h}`, "--k": 1536 / L.w } as CSSProperties}>
+          <img className="map-photo" src={L.img} alt={L.alt} draggable={false} />
+          <div className="map-overlay">
+            {L.title && <div className="mp mp-ui mp-title" style={ui(L.title)}><span className="mt-icon">🏠</span><div><b>{M.adventure}</b><small>{M.mapSub}</small></div></div>}
+            {L.bubble && <div className="mp mp-ui mp-bubble" style={ui(L.bubble)}><span className="mb-avatar">🕵️</span><p>Halo, <b>{player?.nickname || "Detektif"}</b>! {M.bubble}</p></div>}
+            {L.progress && <div className="mp mp-ui mp-progress" style={ui(L.progress)}><span className="mp-star">★</span><div><b>Progres Belajar <em>{completed.length}/{TOTAL_POS}</em></b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div></div>}
+            {L.chipProgress && <div className="mp mp-ui mp-progress mp-chip" style={ui(L.chipProgress)}><span className="mp-star">★</span><div><b>Progres</b><div className="bar"><i style={{ width: `${progress}%` }} /></div></div><em>{completed.length}/{TOTAL_POS}</em><button className="mp-q" onClick={() => setShowHelp(true)} aria-label="Cara Bermain">?</button></div>}
+            {L.help && <button className="mp nav-hit" style={ui(L.help)} aria-label="Cara Bermain" onClick={() => setShowHelp(true)} />}
+            {L.back && <button className="mp nav-hit" style={ui(L.back)} aria-label="Kembali ke Kumpulan Materi" onClick={() => setScreen("materi")} />}
+            {(["home", "materi", "peta", "profil"] as const).map((k) => <button key={k} className="mp nav-hit" style={ui(L.nav[k])} aria-label={labels[k]} onClick={navTo[k]} />)}
             {positions.map((item) => {
-              const L = posLayout[item.id];
+              const PL = L.pos[item.id];
               const st = status[item.id];
               const sc = completed.includes(item.id) ? scoreOf(item.id) : null;
               const go = () => enterPosition(item.id);
               return <Fragment key={item.id}>
-                <button className={`mp hit ${st}`} style={{ ...boxStyle(L.hit), "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={go} aria-label={`Pos ${item.id}: ${item.title}`}>
-                  {sc && !L.drop ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}
+                <button className={`mp hit ${st}`} style={{ ...pctBox(PL.hit, L.w, L.h), "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={go} aria-label={`Pos ${item.id}: ${item.title}`}>
+                  {sc && L.mode === "pills" ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}
                 </button>
-                {L.drop ? <button className={`mp mp-dropwrap ${st}`} style={{ left: `${(L.drop.x / MAP_W) * 100}%`, top: `${(L.drop.y / MAP_H) * 100}%`, "--pin": item.color } as CSSProperties} disabled={st === "locked"} onClick={go} tabIndex={-1} aria-hidden="true">{sc ? <span className="pin-stars">{[0, 1, 2].map((i) => <i key={i} className={sc.percent >= [34, 67, 100][i] ? "on" : ""}>★</i>)}</span> : null}<span className="pin-drop"><b>{item.id}</b></span></button> : null}
-                <button className={`mp mp-pill ${st}`} style={boxStyle(L.pill)} disabled={st === "locked"} onClick={go} tabIndex={-1}>
+                {PL.pill && <button className={`mp mp-pill ${st}`} style={pctBox(PL.pill, L.w, L.h)} disabled={st === "locked"} onClick={go} tabIndex={-1}>
                   <span className={`pl-icon ${st}`}>{st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={18} /> : "★"}</span>
                   <span className="pl-text"><b>{item.title}</b><span className="ar" dir="rtl">{item.arabic}</span></span>
-                </button>
+                </button>}
+                {PL.badge && <span className={`mp mp-badge ${st}`} style={{ left: `${(PL.badge.x / L.w) * 100}%`, top: `${(PL.badge.y / L.h) * 100}%` }} aria-hidden="true">
+                  {st === "locked" ? <LockKeyhole size={16} /> : st === "done" ? <Check size={18} /> : "★"}
+                </span>}
               </Fragment>;
             })}
-            <button className="mp mp-ui mp-book" style={ui(18, 842, 388, 128)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>{M.sidekick}</small></div><i>→</i></button>
-            <button className="mp mp-ui mp-sign" style={ui(1268, 736, 214, 128)} onClick={() => (nextPosition ? enterPosition(nextPosition.id) : setScreen("result"))}><span>{nextPosition ? "Jalur Menuju Misi Berikutnya" : "Lihat Skor Akhir"}</span><ArrowRight size={22} /></button>
-            <div className="mp mp-ui mp-chest" style={ui(1300, 878, 232, 100)}><span>🎁</span><div><b>Bintang</b><small>★ {starsEarned}/5</small></div></div>
+            {L.summary && <button className="mp mp-ui mp-book" style={ui(L.summary)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b><small>{M.sidekick}</small></div><i>→</i></button>}
+            {L.chipSummary && <button className="mp mp-ui mp-book mp-chipbook" style={ui(L.chipSummary)} onClick={() => setShowSummary(true)}><span className="mb-icon">📖</span><div><b>Ringkasan Materi</b></div><i>→</i></button>}
+            {L.next && <button className="mp nav-hit" style={ui(L.next)} aria-label={nextPosition ? "Lanjut ke misi berikutnya" : "Lihat skor akhir"} onClick={goNext} />}
           </div>
         </div>
       </div>
-    </section>}
+    </section>; })()}
 
     {screen === "learn" && slide && <section className="content-section">
       <button className="back-link" onClick={() => setScreen("map")}><ArrowLeft size={16} /> Kembali ke peta</button>
@@ -340,6 +335,7 @@ export default function Page() {
             <b>{item.name}</b><small><Mixed text={item.rule} /></small>
             <div className="sign-example"><Segs segs={item.segs} /><em>{item.meaning}</em></div>
             <div className="sign-part">Bagian merah: <span className="ar hl" dir="rtl">{item.part}</span></div>
+            {item.extra && <div className="sign-extra"><small>Contoh lain</small>{item.extra.map((e) => <span className="xc" key={e.ar}><span className="ar" dir="rtl">{e.ar}</span><em>{e.id}</em></span>)}</div>}
           </div>)}</div>
         </div>}
         {slide.kind === "words" && <div>

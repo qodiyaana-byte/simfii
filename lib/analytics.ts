@@ -10,7 +10,7 @@ export const MATERI_KEYS: MateriKey[] = ["mubtada", "isimfiil"];
 export const MATERI_LABEL: Record<MateriKey, string> = { mubtada: "Mubtada' dan Khabar", isimfiil: "Isim dan Fi'il" };
 
 const NAMES_ISIMFIIL: Record<number, string> = { 1: "Rumah Isim", 2: "Rumah Fi'il", 3: "Balai Peta Konsep", 4: "Kantor Detektif", 5: "Taman Tantangan" };
-const NAMES_MUBTADA: Record<number, string> = { 1: "Rumah Ismiyah", 2: "Rumah Definisi", 3: "Balai Syarat", 4: "Kantor Implikasi", 5: "Taman Tantangan" };
+const NAMES_MUBTADA: Record<number, string> = { 1: "Rumah Siswa", 2: "Warung", 3: "Pos Satpam", 4: "Pos Ronda", 5: "Jembatan" };
 export const POS_NAMES_OF: Record<MateriKey, Record<number, string>> = { isimfiil: NAMES_ISIMFIIL, mubtada: NAMES_MUBTADA };
 // Dipertahankan agar kode lama tetap bekerja (materi Isim dan Fi'il).
 export const POS_NAMES = NAMES_ISIMFIIL;
